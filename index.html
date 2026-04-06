@@ -1,851 +1,1082 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Personal Dashboard</title>
 
   <!-- ============================================================
-       FONTS — Loaded from Google Fonts CDN for unique typography.
-       "Syne" for headings: geometric, confident.
-       "DM Mono" for the clock: monospaced, precise.
-       "DM Sans" for body text: clean and modern.
+       FONTS
+       - "Syne"    : bold, geometric display font for headings
+       - "DM Mono" : monospaced for clock & code-like labels
+       - "DM Sans" : clean sans-serif for body text
   ============================================================ -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Mono:wght@400;500&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet">
 
   <style>
     /* ============================================================
-       CSS VARIABLES — Central design tokens for the dark theme.
-       Changing these values will update the whole dashboard.
+       CSS DESIGN TOKENS — change here to retheme everything
     ============================================================ */
     :root {
-      --bg:        #0c0d10;
-      --surface:   #13151a;
-      --surface2:  #1c1f28;
-      --border:    #252830;
-      --accent:    #5b6af5;
-      --accent2:   #e05c8a;
-      --text:      #e8eaf0;
-      --muted:     #6b7080;
+      --bg:        #080a0f;
+      --surface:   #10131a;
+      --surface2:  #181c26;
+      --surface3:  #1e2230;
+      --border:    #252a38;
+      --accent:    #4f6ef7;
+      --accent2:   #e0596a;
+      --accent3:   #3ecf8e;
+      --accent4:   #f5a623;
+      --text:      #e6e9f4;
+      --muted:     #5a6080;
+      --muted2:    #7a84a8;
       --success:   #3ecf8e;
       --danger:    #f06060;
-      --radius:    14px;
-      --shadow:    0 4px 32px rgba(0,0,0,0.5);
+      --radius:    16px;
+      --radius-sm: 10px;
+      --shadow:    0 8px 40px rgba(0,0,0,0.6);
     }
 
-    /* ============================================================
-       RESET & BASE STYLES
-    ============================================================ */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
 
     body {
       background: var(--bg);
       color: var(--text);
       font-family: 'DM Sans', sans-serif;
       min-height: 100vh;
-      padding: 32px 20px 60px;
+      padding: 28px 16px 80px;
       background-image:
-        radial-gradient(ellipse 70% 40% at 80% 0%, rgba(91,106,245,0.08) 0%, transparent 60%),
-        radial-gradient(ellipse 50% 30% at 10% 90%, rgba(224,92,138,0.06) 0%, transparent 60%);
+        radial-gradient(ellipse 60% 35% at 85% 5%,  rgba(79,110,247,0.10) 0%, transparent 65%),
+        radial-gradient(ellipse 40% 25% at 5%  90%, rgba(224,89,106,0.07) 0%, transparent 60%),
+        radial-gradient(ellipse 35% 20% at 50% 50%, rgba(62,207,142,0.04) 0%, transparent 70%);
     }
 
     /* ============================================================
-       LAYOUT — Responsive CSS grid: 2 cols on wide, 1 col on mobile.
+       PAGE HEADER
     ============================================================ */
     .page-header {
-      max-width: 960px;
-      margin: 0 auto 36px;
-      display: flex;
-      align-items: baseline;
-      gap: 12px;
+      max-width: 1200px; margin: 0 auto 28px;
+      display: flex; align-items: center;
+      justify-content: space-between; flex-wrap: wrap; gap: 10px;
     }
+    .page-header-left { display: flex; align-items: baseline; gap: 12px; }
     .page-header h1 {
-      font-family: 'Syne', sans-serif;
-      font-weight: 800;
-      font-size: clamp(1.4rem, 3vw, 1.9rem);
-      letter-spacing: -0.02em;
-      color: var(--text);
+      font-family: 'Syne', sans-serif; font-weight: 800;
+      font-size: clamp(1.4rem, 3vw, 2rem); letter-spacing: -0.03em;
+      background: linear-gradient(135deg, var(--text) 50%, var(--accent));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
     }
-    .page-header span {
-      color: var(--muted);
-      font-size: 0.85rem;
-      font-family: 'DM Mono', monospace;
-    }
-
-    .grid {
-      max-width: 960px;
-      margin: 0 auto;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      grid-template-rows: auto auto auto;
-      gap: 20px;
-    }
-
-    /* Stack to single column on narrow screens */
-    @media (max-width: 680px) {
-      .grid { grid-template-columns: 1fr; }
-      .widget-clock { grid-column: 1; }
-      .widget-quote  { grid-column: 1; }
-    }
-
-    /* Clock and quote span full width at top */
-    .widget-clock { grid-column: 1; }
-    .widget-quote  { grid-column: 2; }
-    .widget-links  { grid-column: 1 / -1; }
-    .widget-todo   { grid-column: 1 / -1; }
+    #greeting { color: var(--muted2); font-size: 0.83rem; font-family: 'DM Mono', monospace; }
+    .header-date { font-family: 'DM Mono', monospace; font-size: 0.78rem; color: var(--muted); }
 
     /* ============================================================
-       WIDGET BASE CARD — shared card styles
+       RESPONSIVE GRID
+    ============================================================ */
+    .grid {
+      max-width: 1200px; margin: 0 auto;
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px;
+    }
+    .col-1 { grid-column: span 1; }
+    .col-2 { grid-column: span 2; }
+    .col-3 { grid-column: span 3; }
+    @media (max-width: 900px) {
+      .grid { grid-template-columns: 1fr 1fr; }
+      .col-3 { grid-column: span 2; }
+    }
+    @media (max-width: 580px) {
+      .grid { grid-template-columns: 1fr; }
+      .col-2, .col-3 { grid-column: span 1; }
+    }
+
+    /* ============================================================
+       WIDGET BASE CARD
     ============================================================ */
     .widget {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 28px;
-      box-shadow: var(--shadow);
-      animation: fadeUp 0.5s ease both;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 24px;
+      box-shadow: var(--shadow); animation: fadeUp 0.55s ease both; position: relative;
     }
-    .widget:nth-child(1) { animation-delay: 0.05s; }
-    .widget:nth-child(2) { animation-delay: 0.10s; }
-    .widget:nth-child(3) { animation-delay: 0.15s; }
-    .widget:nth-child(4) { animation-delay: 0.20s; }
+    .widget:nth-child(1)  { animation-delay: 0.04s; }
+    .widget:nth-child(2)  { animation-delay: 0.08s; }
+    .widget:nth-child(3)  { animation-delay: 0.12s; }
+    .widget:nth-child(4)  { animation-delay: 0.16s; }
+    .widget:nth-child(5)  { animation-delay: 0.20s; }
+    .widget:nth-child(6)  { animation-delay: 0.24s; }
+    .widget:nth-child(7)  { animation-delay: 0.28s; }
+    .widget:nth-child(8)  { animation-delay: 0.32s; }
+    .widget:nth-child(9)  { animation-delay: 0.36s; }
+    .widget:nth-child(10) { animation-delay: 0.40s; }
+    .widget:nth-child(11) { animation-delay: 0.44s; }
+    .widget:nth-child(12) { animation-delay: 0.48s; }
 
     @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(18px); }
+      from { opacity: 0; transform: translateY(20px); }
       to   { opacity: 1; transform: translateY(0); }
     }
 
     .widget-label {
-      font-family: 'DM Mono', monospace;
-      font-size: 0.68rem;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--muted);
-      margin-bottom: 18px;
+      font-family: 'DM Mono', monospace; font-size: 0.64rem;
+      letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--muted); margin-bottom: 16px;
+      display: flex; align-items: center; gap: 8px;
     }
+    .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
+    .dot.green  { background: var(--accent3); }
+    .dot.red    { background: var(--accent2); }
+    .dot.yellow { background: var(--accent4); }
 
     /* ============================================================
-       CLOCK WIDGET — Updates every second via setInterval.
+       1. CLOCK
     ============================================================ */
     .clock-time {
       font-family: 'DM Mono', monospace;
-      font-size: clamp(2.4rem, 7vw, 3.6rem);
-      font-weight: 500;
-      letter-spacing: -0.04em;
-      color: var(--text);
-      line-height: 1;
-      margin-bottom: 8px;
-      /* Subtle gradient shimmer on the time digits */
-      background: linear-gradient(135deg, var(--text) 60%, var(--accent));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
+      font-size: clamp(2.2rem, 6vw, 3.4rem);
+      font-weight: 500; letter-spacing: -0.04em; line-height: 1; margin-bottom: 8px;
+      background: linear-gradient(130deg, var(--text) 55%, var(--accent));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
     }
-
-    .clock-date {
-      font-size: 0.9rem;
-      color: var(--muted);
-      letter-spacing: 0.02em;
-    }
+    .clock-date { font-size: 0.85rem; color: var(--muted2); }
 
     /* ============================================================
-       QUOTE WIDGET — Random quote chosen at page load.
+       2. QUOTE
     ============================================================ */
-    .quote-text {
+    .quote-body {
       font-family: 'Syne', sans-serif;
-      font-size: clamp(0.95rem, 2vw, 1.1rem);
-      font-weight: 400;
-      line-height: 1.65;
-      color: var(--text);
-      margin-bottom: 14px;
-      font-style: italic;
+      font-size: clamp(0.9rem, 1.8vw, 1.05rem);
+      line-height: 1.7; color: var(--text); font-style: italic; margin-bottom: 12px;
     }
-    .quote-text::before { content: '\201C'; color: var(--accent); font-style: normal; margin-right: 2px; }
-    .quote-text::after  { content: '\201D'; color: var(--accent); font-style: normal; margin-left: 2px; }
-
-    .quote-author {
-      font-size: 0.8rem;
-      color: var(--muted);
-      font-family: 'DM Mono', monospace;
+    .quote-body::before { content: '\201C'; color: var(--accent); font-style: normal; }
+    .quote-body::after  { content: '\201D'; color: var(--accent); font-style: normal; }
+    .quote-author { font-family: 'DM Mono', monospace; font-size: 0.75rem; color: var(--muted); }
+    .quote-refresh {
+      position: absolute; top: 20px; right: 20px;
+      background: none; border: none; color: var(--muted); font-size: 0.9rem;
+      cursor: pointer; padding: 4px 6px; border-radius: 6px; transition: color 0.15s, background 0.15s;
     }
+    .quote-refresh:hover { color: var(--accent); background: rgba(79,110,247,0.1); }
 
     /* ============================================================
-       QUICK LINKS WIDGET — 4 customisable button links.
-       Click the pencil icon to edit label & URL.
+       3. WEATHER
+    ============================================================ */
+    .weather-main { display: flex; align-items: center; gap: 16px; margin-bottom: 14px; }
+    .weather-icon { font-size: 2.8rem; line-height: 1; }
+    .weather-temp {
+      font-family: 'DM Mono', monospace;
+      font-size: 2.2rem; font-weight: 500; letter-spacing: -0.04em; line-height: 1;
+    }
+    .weather-desc { font-size: 0.82rem; color: var(--muted2); margin-top: 4px; text-transform: capitalize; }
+    .weather-meta { display: flex; gap: 16px; flex-wrap: wrap; }
+    .weather-meta-item { font-family: 'DM Mono', monospace; font-size: 0.72rem; color: var(--muted); }
+    .weather-meta-item span { color: var(--muted2); }
+    .weather-city-form { display: flex; gap: 8px; margin-top: 14px; }
+    .weather-city-input {
+      flex: 1; background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 8px; color: var(--text); font-family: 'DM Sans', sans-serif;
+      font-size: 0.82rem; padding: 8px 10px; outline: none; transition: border-color 0.2s;
+    }
+    .weather-city-input:focus { border-color: var(--accent); }
+    .weather-city-input::placeholder { color: var(--muted); }
+    .btn-xs {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 8px; color: var(--muted2); font-size: 0.78rem;
+      font-family: 'DM Sans', sans-serif; padding: 8px 12px; cursor: pointer;
+      transition: all 0.15s; white-space: nowrap;
+    }
+    .btn-xs:hover { border-color: var(--accent); color: var(--accent); background: rgba(79,110,247,0.08); }
+    .weather-msg { color: var(--muted); font-size: 0.85rem; font-family: 'DM Mono', monospace; }
+
+    /* ============================================================
+       4. QUICK LINKS
     ============================================================ */
     .links-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 12px;
+      display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px;
     }
-    @media (max-width: 500px) {
-      .links-grid { grid-template-columns: repeat(2, 1fr); }
-    }
+    @media (max-width: 700px) { .links-grid { grid-template-columns: repeat(3, 1fr); } }
 
     .link-card {
-      position: relative;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 18px 10px;
-      text-decoration: none;
-      color: var(--text);
-      font-size: 0.82rem;
-      font-weight: 500;
-      transition: border-color 0.2s, transform 0.15s, background 0.2s;
-      cursor: pointer;
-      overflow: hidden;
-      min-height: 90px;
+      position: relative; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 7px;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); padding: 16px 8px;
+      text-decoration: none; color: var(--text); font-size: 0.78rem; font-weight: 500;
+      transition: border-color 0.2s, transform 0.15s, background 0.2s; min-height: 80px;
     }
-    .link-card:hover {
-      border-color: var(--accent);
-      background: rgba(91,106,245,0.08);
-      transform: translateY(-2px);
-    }
-    .link-card .link-icon {
-      font-size: 1.5rem;
-      line-height: 1;
-    }
-    .link-card .link-label {
-      text-align: center;
-      word-break: break-word;
-      line-height: 1.3;
-    }
-
-    /* Edit button (pencil) shown on hover */
+    .link-card:hover { border-color: var(--accent); background: rgba(79,110,247,0.08); transform: translateY(-2px); }
+    .link-icon { font-size: 1.4rem; line-height: 1; }
+    .link-label { text-align: center; word-break: break-word; line-height: 1.3; }
     .link-edit-btn {
-      position: absolute;
-      top: 6px; right: 6px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      color: var(--muted);
-      font-size: 0.7rem;
-      padding: 2px 5px;
-      cursor: pointer;
-      opacity: 0;
-      transition: opacity 0.15s;
-      line-height: 1.4;
+      position: absolute; top: 5px; right: 5px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 5px; color: var(--muted); font-size: 0.65rem;
+      padding: 2px 5px; cursor: pointer; opacity: 0; transition: opacity 0.15s;
     }
     .link-card:hover .link-edit-btn { opacity: 1; }
     .link-edit-btn:hover { color: var(--accent); border-color: var(--accent); }
 
     /* ============================================================
-       EDIT MODAL — Inline modal for editing link label/URL.
+       5. NEWS FEED
     ============================================================ */
-    .modal-backdrop {
-      display: none;
-      position: fixed; inset: 0;
-      background: rgba(0,0,0,0.7);
-      backdrop-filter: blur(4px);
-      z-index: 100;
-      align-items: center;
-      justify-content: center;
+    .news-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; }
+    .news-tab {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 20px; color: var(--muted2); font-size: 0.72rem;
+      font-family: 'DM Mono', monospace; padding: 5px 12px; cursor: pointer;
+      transition: all 0.15s; letter-spacing: 0.04em;
     }
-    .modal-backdrop.open { display: flex; }
-    .modal {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 28px;
-      width: 340px;
-      box-shadow: var(--shadow);
-      animation: fadeUp 0.2s ease;
+    .news-tab.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .news-tab:hover:not(.active) { border-color: var(--accent); color: var(--accent); }
+    .news-list { display: flex; flex-direction: column; gap: 12px; }
+    .news-item {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); padding: 14px 16px; transition: border-color 0.2s;
     }
-    .modal h3 {
-      font-family: 'Syne', sans-serif;
-      font-size: 1.05rem;
-      margin-bottom: 20px;
+    .news-item:hover { border-color: var(--accent); }
+    .news-item-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 6px; }
+    .news-title { font-family: 'Syne', sans-serif; font-size: 0.88rem; font-weight: 700; line-height: 1.4; color: var(--text); }
+    .news-title a { color: inherit; text-decoration: none; transition: color 0.15s; }
+    .news-title a:hover { color: var(--accent); }
+    .news-date { font-family: 'DM Mono', monospace; font-size: 0.65rem; color: var(--muted); white-space: nowrap; flex-shrink: 0; }
+    .news-summary {
+      font-size: 0.8rem; color: var(--muted2); line-height: 1.55;
+      display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
     }
-    .modal-field { margin-bottom: 14px; }
-    .modal-field label {
-      display: block;
-      font-size: 0.78rem;
-      color: var(--muted);
-      font-family: 'DM Mono', monospace;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      margin-bottom: 6px;
+    .news-read-more {
+      display: inline-block; margin-top: 6px;
+      font-size: 0.72rem; font-family: 'DM Mono', monospace;
+      color: var(--accent); text-decoration: none; letter-spacing: 0.04em;
     }
-    .modal-field input {
-      width: 100%;
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      color: var(--text);
-      font-family: 'DM Sans', sans-serif;
-      font-size: 0.9rem;
-      padding: 10px 12px;
-      outline: none;
-      transition: border-color 0.2s;
-    }
-    .modal-field input:focus { border-color: var(--accent); }
-    .modal-actions {
-      display: flex; gap: 10px; margin-top: 20px;
-    }
-    .btn {
-      flex: 1;
-      padding: 10px;
-      border-radius: 8px;
-      border: none;
-      font-family: 'DM Sans', sans-serif;
-      font-size: 0.88rem;
-      font-weight: 500;
-      cursor: pointer;
-      transition: opacity 0.15s, transform 0.12s;
-    }
-    .btn:hover { opacity: 0.88; transform: translateY(-1px); }
-    .btn-primary { background: var(--accent); color: #fff; }
-    .btn-ghost {
-      background: var(--surface2);
-      color: var(--muted);
-      border: 1px solid var(--border);
-    }
+    .news-read-more:hover { text-decoration: underline; }
+    .news-msg { text-align: center; color: var(--muted); font-family: 'DM Mono', monospace; font-size: 0.8rem; padding: 24px 0; }
+    .news-err { text-align: center; color: var(--danger); font-family: 'DM Mono', monospace; font-size: 0.78rem; padding: 16px 0; }
 
     /* ============================================================
-       TO-DO WIDGET — Add, check off, and delete tasks.
-       State persisted to localStorage.
+       6. POMODORO
     ============================================================ */
-    .todo-input-row {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 20px;
+    .pomodoro-ring-wrap { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+    .pomo-svg { width: 140px; height: 140px; }
+    .pomo-track { fill: none; stroke: var(--border); stroke-width: 8; }
+    .pomo-fill {
+      fill: none; stroke: var(--accent); stroke-width: 8; stroke-linecap: round;
+      transform: rotate(-90deg); transform-origin: 50% 50%;
+      transition: stroke-dashoffset 0.9s linear, stroke 0.4s;
     }
-    .todo-input {
-      flex: 1;
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      color: var(--text);
-      font-family: 'DM Sans', sans-serif;
-      font-size: 0.92rem;
-      padding: 11px 14px;
-      outline: none;
-      transition: border-color 0.2s;
+    .pomo-fill.break-mode { stroke: var(--accent3); }
+    .pomo-svg-container { position: relative; width: 140px; height: 140px; }
+    .pomo-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; }
+    .pomo-time-display { font-family: 'DM Mono', monospace; font-size: 1.7rem; font-weight: 500; letter-spacing: -0.04em; line-height: 1; }
+    .pomo-mode-label { font-family: 'DM Mono', monospace; font-size: 0.65rem; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; margin-top: 4px; }
+    .pomo-controls { display: flex; gap: 10px; }
+    .btn-pomo {
+      background: var(--surface2); border: 1px solid var(--border); border-radius: 8px;
+      color: var(--text); font-size: 0.82rem; font-family: 'DM Sans', sans-serif;
+      padding: 9px 18px; cursor: pointer; transition: all 0.15s;
     }
-    .todo-input:focus { border-color: var(--accent); }
-    .todo-input::placeholder { color: var(--muted); }
+    .btn-pomo:hover { border-color: var(--accent); color: var(--accent); }
+    .btn-pomo.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .pomo-session-info { font-family: 'DM Mono', monospace; font-size: 0.7rem; color: var(--muted); text-align: center; letter-spacing: 0.06em; }
+    .pomo-dots { display: flex; gap: 5px; margin-top: 6px; justify-content: center; }
+    .pomo-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--border); transition: background 0.2s; }
+    .pomo-dot.done { background: var(--accent); }
 
-    .btn-add {
-      background: var(--accent);
-      color: #fff;
-      border: none;
-      border-radius: 8px;
-      padding: 11px 20px;
-      font-family: 'DM Sans', sans-serif;
-      font-size: 0.9rem;
-      font-weight: 500;
-      cursor: pointer;
-      transition: opacity 0.15s, transform 0.12s;
-      white-space: nowrap;
+    /* ============================================================
+       7. NOTES SCRATCHPAD
+    ============================================================ */
+    .notes-area {
+      width: 100%; min-height: 160px;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); color: var(--text);
+      font-family: 'DM Sans', sans-serif; font-size: 0.88rem; line-height: 1.6;
+      padding: 14px; outline: none; resize: vertical; transition: border-color 0.2s;
     }
-    .btn-add:hover { opacity: 0.88; transform: translateY(-1px); }
+    .notes-area:focus { border-color: var(--accent); }
+    .notes-area::placeholder { color: var(--muted); }
+    .notes-meta { display: flex; justify-content: space-between; margin-top: 8px; font-family: 'DM Mono', monospace; font-size: 0.68rem; color: var(--muted); }
+    .notes-saved { color: var(--success); transition: opacity 0.3s; }
 
-    /* The task list itself */
-    .todo-list {
-      list-style: none;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      max-height: 340px;
-      overflow-y: auto;
-      padding-right: 4px;
+    /* ============================================================
+       8. HABIT TRACKER
+    ============================================================ */
+    .habit-progress-wrap { margin-bottom: 14px; }
+    .habit-progress-bar { height: 4px; background: var(--border); border-radius: 99px; overflow: hidden; margin-bottom: 6px; }
+    .habit-progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent3), var(--accent)); border-radius: 99px; transition: width 0.4s ease; }
+    .habit-progress-label { font-family: 'DM Mono', monospace; font-size: 0.68rem; color: var(--muted); }
+    .habit-list { display: flex; flex-direction: column; gap: 8px; }
+    .habit-item {
+      display: flex; align-items: center; gap: 12px;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 8px; padding: 11px 14px; cursor: pointer; transition: border-color 0.2s, background 0.2s; user-select: none;
     }
-    /* Custom scrollbar */
-    .todo-list::-webkit-scrollbar { width: 4px; }
-    .todo-list::-webkit-scrollbar-track { background: transparent; }
-    .todo-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
-
-    .todo-item {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 12px 14px;
-      transition: opacity 0.2s;
-    }
-    .todo-item.done { opacity: 0.4; }
-    .todo-item.done .todo-text { text-decoration: line-through; color: var(--muted); }
-
-    /* Custom checkbox */
-    .todo-check {
-      width: 18px; height: 18px;
-      min-width: 18px;
-      border: 2px solid var(--border);
-      border-radius: 5px;
-      cursor: pointer;
+    .habit-item.checked { border-color: var(--success); background: rgba(62,207,142,0.06); }
+    .habit-cb {
+      width: 18px; height: 18px; min-width: 18px;
+      border: 2px solid var(--border); border-radius: 5px;
       display: flex; align-items: center; justify-content: center;
-      transition: background 0.15s, border-color 0.15s;
-      background: transparent;
+      transition: all 0.15s; background: transparent;
     }
-    .todo-item.done .todo-check {
-      background: var(--success);
-      border-color: var(--success);
-    }
-    .todo-check::after {
-      content: '✓';
-      color: #fff;
-      font-size: 0.72rem;
-      font-weight: 700;
-      opacity: 0;
-      transition: opacity 0.15s;
-    }
-    .todo-item.done .todo-check::after { opacity: 1; }
+    .habit-item.checked .habit-cb { background: var(--success); border-color: var(--success); }
+    .habit-cb::after { content: '✓'; color: #fff; font-size: 0.7rem; font-weight: 700; opacity: 0; transition: opacity 0.15s; }
+    .habit-item.checked .habit-cb::after { opacity: 1; }
+    .habit-name { flex: 1; font-size: 0.88rem; font-weight: 500; }
+    .habit-streak { font-family: 'DM Mono', monospace; font-size: 0.7rem; color: var(--muted); }
+    .habit-add-row { display: flex; gap: 8px; margin-top: 10px; }
 
-    .todo-text {
-      flex: 1;
-      font-size: 0.92rem;
-      line-height: 1.4;
-      word-break: break-word;
+    /* ============================================================
+       9. READING LIST
+    ============================================================ */
+    .reading-input-row { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+    .reading-list { display: flex; flex-direction: column; gap: 8px; max-height: 260px; overflow-y: auto; }
+    .reading-list::-webkit-scrollbar { width: 3px; }
+    .reading-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+    .reading-item {
+      display: flex; align-items: flex-start; gap: 10px;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 8px; padding: 11px 12px; transition: border-color 0.2s;
     }
+    .reading-item:hover { border-color: var(--accent); }
+    .reading-item.read { opacity: 0.45; }
+    .reading-item.read .reading-title { text-decoration: line-through; }
+    .reading-cb {
+      width: 16px; height: 16px; min-width: 16px;
+      border: 2px solid var(--border); border-radius: 4px;
+      cursor: pointer; margin-top: 2px;
+      display: flex; align-items: center; justify-content: center; transition: all 0.15s;
+    }
+    .reading-item.read .reading-cb { background: var(--accent4); border-color: var(--accent4); }
+    .reading-cb::after { content: '✓'; color: #fff; font-size: 0.6rem; font-weight: 700; opacity: 0; transition: opacity 0.15s; }
+    .reading-item.read .reading-cb::after { opacity: 1; }
+    .reading-info { flex: 1; min-width: 0; }
+    .reading-title { font-size: 0.84rem; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .reading-title a { color: inherit; text-decoration: none; }
+    .reading-title a:hover { color: var(--accent); }
+    .reading-url { font-family: 'DM Mono', monospace; font-size: 0.68rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .reading-del { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 0.85rem; padding: 2px 4px; border-radius: 4px; transition: color 0.15s, background 0.15s; line-height: 1; }
+    .reading-del:hover { color: var(--danger); background: rgba(240,96,96,0.1); }
+    .reading-empty { text-align: center; color: var(--muted); font-family: 'DM Mono', monospace; font-size: 0.8rem; padding: 20px 0; }
 
-    .todo-delete {
-      background: none;
-      border: none;
-      color: var(--muted);
-      font-size: 1rem;
-      cursor: pointer;
-      padding: 2px 4px;
-      border-radius: 4px;
-      transition: color 0.15s, background 0.15s;
-      line-height: 1;
-    }
-    .todo-delete:hover { color: var(--danger); background: rgba(240,96,96,0.1); }
+    /* ============================================================
+       10. TO-DO
+    ============================================================ */
+    .todo-input-row { display: flex; gap: 10px; margin-bottom: 18px; }
+    .todo-list { list-style: none; display: flex; flex-direction: column; gap: 7px; max-height: 300px; overflow-y: auto; padding-right: 4px; }
+    .todo-list::-webkit-scrollbar { width: 3px; }
+    .todo-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+    .todo-item { display: flex; align-items: center; gap: 11px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 11px 13px; transition: opacity 0.2s; }
+    .todo-item.done { opacity: 0.38; }
+    .todo-item.done .todo-text { text-decoration: line-through; color: var(--muted); }
+    .todo-cb { width: 17px; height: 17px; min-width: 17px; border: 2px solid var(--border); border-radius: 5px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s; background: transparent; }
+    .todo-item.done .todo-cb { background: var(--success); border-color: var(--success); }
+    .todo-cb::after { content: '✓'; color: #fff; font-size: 0.68rem; font-weight: 700; opacity: 0; transition: opacity 0.15s; }
+    .todo-item.done .todo-cb::after { opacity: 1; }
+    .todo-text { flex: 1; font-size: 0.88rem; line-height: 1.4; word-break: break-word; }
+    .todo-del { background: none; border: none; color: var(--muted); font-size: 0.9rem; cursor: pointer; padding: 2px 4px; border-radius: 4px; transition: color 0.15s, background 0.15s; line-height: 1; }
+    .todo-del:hover { color: var(--danger); background: rgba(240,96,96,0.1); }
+    .todo-empty { text-align: center; color: var(--muted); font-family: 'DM Mono', monospace; font-size: 0.8rem; padding: 24px 0; }
+    .todo-stats { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; font-family: 'DM Mono', monospace; font-size: 0.72rem; color: var(--muted); }
+    .btn-clear { background: none; border: none; color: var(--muted); font-size: 0.72rem; font-family: 'DM Mono', monospace; cursor: pointer; padding: 2px 6px; border-radius: 4px; transition: color 0.15s, background 0.15s; }
+    .btn-clear:hover { color: var(--danger); background: rgba(240,96,96,0.08); }
+    .todo-prog { height: 3px; background: var(--border); border-radius: 99px; margin-top: 8px; overflow: hidden; }
+    .todo-prog-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--success)); border-radius: 99px; transition: width 0.4s ease; }
 
-    .todo-empty {
-      text-align: center;
-      color: var(--muted);
-      font-size: 0.85rem;
-      padding: 28px 0;
-      font-family: 'DM Mono', monospace;
-    }
+    /* ============================================================
+       11. WORLD CLOCKS
+    ============================================================ */
+    .world-clocks { display: flex; flex-direction: column; gap: 10px; }
+    .wc-item { display: flex; justify-content: space-between; align-items: center; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; }
+    .wc-city { font-size: 0.82rem; font-weight: 500; }
+    .wc-zone { font-family: 'DM Mono', monospace; font-size: 0.65rem; color: var(--muted); margin-top: 2px; }
+    .wc-time { font-family: 'DM Mono', monospace; font-size: 1.1rem; font-weight: 500; letter-spacing: -0.02em; }
 
-    /* Task stats bar */
-    .todo-stats {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-top: 14px;
-      font-size: 0.78rem;
-      color: var(--muted);
-      font-family: 'DM Mono', monospace;
-    }
-    .btn-clear-done {
-      background: none;
-      border: none;
-      color: var(--muted);
-      font-size: 0.78rem;
-      font-family: 'DM Mono', monospace;
-      cursor: pointer;
-      padding: 2px 6px;
-      border-radius: 4px;
-      transition: color 0.15s, background 0.15s;
-    }
-    .btn-clear-done:hover { color: var(--danger); background: rgba(240,96,96,0.08); }
+    /* ============================================================
+       12. MINI CALENDAR
+    ============================================================ */
+    .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+    .cal-month { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.95rem; }
+    .cal-nav { background: none; border: none; color: var(--muted2); cursor: pointer; font-size: 1rem; padding: 2px 6px; border-radius: 5px; transition: color 0.15s; }
+    .cal-nav:hover { color: var(--accent); }
+    .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; text-align: center; }
+    .cal-dow { font-family: 'DM Mono', monospace; font-size: 0.62rem; color: var(--muted); letter-spacing: 0.05em; text-transform: uppercase; padding-bottom: 6px; }
+    .cal-day { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 0.78rem; border-radius: 6px; color: var(--muted2); transition: background 0.15s; }
+    .cal-day.other-month { color: var(--border); }
+    .cal-day.today { background: var(--accent); color: #fff; font-weight: 700; }
 
-    /* Progress bar */
-    .todo-progress {
-      height: 3px;
-      background: var(--border);
-      border-radius: 99px;
-      margin-top: 10px;
-      overflow: hidden;
+    /* ============================================================
+       SHARED FORM CONTROLS
+    ============================================================ */
+    .input-base {
+      flex: 1; background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 8px; color: var(--text); font-family: 'DM Sans', sans-serif;
+      font-size: 0.88rem; padding: 10px 13px; outline: none; transition: border-color 0.2s;
     }
-    .todo-progress-fill {
-      height: 100%;
-      background: linear-gradient(90deg, var(--accent), var(--success));
-      border-radius: 99px;
-      transition: width 0.4s ease;
+    .input-base:focus { border-color: var(--accent); }
+    .input-base::placeholder { color: var(--muted); }
+    .btn-primary {
+      background: var(--accent); color: #fff; border: none; border-radius: 8px;
+      font-family: 'DM Sans', sans-serif; font-size: 0.86rem; font-weight: 500;
+      padding: 10px 18px; cursor: pointer; transition: opacity 0.15s, transform 0.12s; white-space: nowrap;
     }
+    .btn-primary:hover { opacity: 0.88; transform: translateY(-1px); }
+    .kbd { display: inline-block; background: var(--surface3); border: 1px solid var(--border); border-radius: 4px; color: var(--muted); font-family: 'DM Mono', monospace; font-size: 0.6rem; padding: 1px 5px; letter-spacing: 0.04em; vertical-align: middle; margin-left: 4px; }
+
+    /* ============================================================
+       EDIT MODAL
+    ============================================================ */
+    .modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); backdrop-filter: blur(5px); z-index: 200; align-items: center; justify-content: center; }
+    .modal-backdrop.open { display: flex; }
+    .modal { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 28px; width: 340px; box-shadow: var(--shadow); animation: fadeUp 0.2s ease; }
+    .modal h3 { font-family: 'Syne', sans-serif; font-size: 1rem; margin-bottom: 18px; }
+    .modal-field { margin-bottom: 12px; }
+    .modal-field label { display: block; font-size: 0.7rem; color: var(--muted); font-family: 'DM Mono', monospace; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 5px; }
+    .modal-field input { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 0.88rem; padding: 9px 12px; outline: none; transition: border-color 0.2s; }
+    .modal-field input:focus { border-color: var(--accent); }
+    .modal-actions { display: flex; gap: 10px; margin-top: 18px; }
+    .btn-ghost { flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--border); font-family: 'DM Sans', sans-serif; font-size: 0.86rem; background: var(--surface2); color: var(--muted); cursor: pointer; transition: opacity 0.15s; }
+    .btn-ghost:hover { opacity: 0.8; }
+    .btn-save { flex: 1; padding: 10px; border-radius: 8px; border: none; background: var(--accent); color: #fff; font-family: 'DM Sans', sans-serif; font-size: 0.86rem; font-weight: 500; cursor: pointer; transition: opacity 0.15s; }
+    .btn-save:hover { opacity: 0.88; }
   </style>
 </head>
 <body>
 
-  <!-- ============================================================
-       PAGE HEADER
-  ============================================================ -->
+  <!-- PAGE HEADER -->
   <header class="page-header">
-    <h1>Dashboard</h1>
-    <span id="greeting"></span>
+    <div class="page-header-left">
+      <h1>Dashboard</h1>
+      <span id="greeting"></span>
+    </div>
+    <span class="header-date" id="header-date"></span>
   </header>
 
-  <!-- ============================================================
-       MAIN GRID — contains all 4 widgets
-  ============================================================ -->
   <main class="grid">
 
-    <!-- ── WIDGET 1: CLOCK ──────────────────────────────────── -->
-    <div class="widget widget-clock">
-      <div class="widget-label">Current Time</div>
+    <!-- 1. CLOCK -->
+    <div class="widget col-1">
+      <div class="widget-label"><span class="dot"></span>Current Time</div>
       <div class="clock-time" id="clock-time">00:00:00</div>
       <div class="clock-date" id="clock-date">—</div>
     </div>
 
-    <!-- ── WIDGET 2: MOTIVATIONAL QUOTE ─────────────────────── -->
-    <div class="widget widget-quote">
-      <div class="widget-label">Today's Thought</div>
-      <div class="quote-text" id="quote-text"></div>
+    <!-- 2. QUOTE -->
+    <div class="widget col-1">
+      <button class="quote-refresh" id="quote-refresh-btn" title="New quote">↻</button>
+      <div class="widget-label"><span class="dot"></span>Daily Thought</div>
+      <div class="quote-body" id="quote-text"></div>
       <div class="quote-author" id="quote-author"></div>
     </div>
 
-    <!-- ── WIDGET 3: QUICK LINKS ─────────────────────────────── -->
-    <div class="widget widget-links">
-      <div class="widget-label">Quick Links &nbsp;·&nbsp; click ✎ to customise</div>
-      <div class="links-grid" id="links-grid">
-        <!-- Link cards injected by JS -->
+    <!-- 3. WEATHER -->
+    <div class="widget col-1">
+      <div class="widget-label"><span class="dot yellow"></span>Weather</div>
+      <div id="weather-content"><div class="weather-msg">Fetching weather…</div></div>
+      <div class="weather-city-form">
+        <input class="weather-city-input" id="weather-city-input" type="text" placeholder="Change city…" maxlength="50"/>
+        <button class="btn-xs" id="weather-city-btn">Update</button>
       </div>
     </div>
 
-    <!-- ── WIDGET 4: TO-DO LIST ──────────────────────────────── -->
-    <div class="widget widget-todo">
-      <div class="widget-label">To-Do List</div>
+    <!-- 4. QUICK LINKS -->
+    <div class="widget col-3">
+      <div class="widget-label"><span class="dot"></span>Quick Links &nbsp;·&nbsp; hover card to customise ✎</div>
+      <div class="links-grid" id="links-grid"></div>
+    </div>
 
-      <!-- Input row -->
+    <!-- 5. NEWS FEED -->
+    <div class="widget col-3">
+      <div class="widget-label"><span class="dot red"></span>News Feed &nbsp;·&nbsp; Politics &amp; AI Technology</div>
+      <div class="news-tabs" id="news-tabs"></div>
+      <div id="news-content"><div class="news-msg">Loading headlines…</div></div>
+    </div>
+
+    <!-- 6. POMODORO -->
+    <div class="widget col-1">
+      <div class="widget-label"><span class="dot red"></span>Focus Timer <span class="kbd">P</span></div>
+      <div class="pomodoro-ring-wrap">
+        <div class="pomo-svg-container">
+          <svg class="pomo-svg" viewBox="0 0 140 140">
+            <circle class="pomo-track" cx="70" cy="70" r="58"/>
+            <circle class="pomo-fill" id="pomo-ring" cx="70" cy="70" r="58" stroke-dasharray="364.42" stroke-dashoffset="0"/>
+          </svg>
+          <div class="pomo-center">
+            <div class="pomo-time-display" id="pomo-display">25:00</div>
+            <div class="pomo-mode-label" id="pomo-mode">FOCUS</div>
+          </div>
+        </div>
+        <div class="pomo-controls">
+          <button class="btn-pomo" id="pomo-start">Start</button>
+          <button class="btn-pomo" id="pomo-reset">Reset</button>
+        </div>
+        <div class="pomo-session-info">
+          <div id="pomo-session-count">Session 1 of 4</div>
+          <div class="pomo-dots" id="pomo-dots"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 7. NOTES -->
+    <div class="widget col-1">
+      <div class="widget-label"><span class="dot green"></span>Scratchpad <span class="kbd">N</span></div>
+      <textarea class="notes-area" id="notes-area" placeholder="Quick thoughts, links, ideas…"></textarea>
+      <div class="notes-meta">
+        <span id="notes-char-count">0 chars</span>
+        <span class="notes-saved" id="notes-saved-label" style="opacity:0">✓ saved</span>
+      </div>
+    </div>
+
+    <!-- 8. HABITS -->
+    <div class="widget col-1">
+      <div class="widget-label"><span class="dot green"></span>Daily Habits</div>
+      <div class="habit-progress-wrap">
+        <div class="habit-progress-bar"><div class="habit-progress-fill" id="habit-prog-fill" style="width:0%"></div></div>
+        <div class="habit-progress-label" id="habit-prog-label">0 / 0 completed today</div>
+      </div>
+      <div class="habit-list" id="habit-list"></div>
+      <div class="habit-add-row">
+        <input class="input-base" id="habit-input" type="text" placeholder="Add habit (e.g. 🏃 Run)" maxlength="40"/>
+        <button class="btn-primary" id="habit-add-btn">+ Add</button>
+      </div>
+    </div>
+
+    <!-- 9. READING LIST -->
+    <div class="widget col-1">
+      <div class="widget-label"><span class="dot yellow"></span>Reading List</div>
+      <div class="reading-input-row">
+        <input class="input-base" id="reading-title-input" type="text" placeholder="Title" maxlength="80" style="flex:1.3"/>
+        <input class="input-base" id="reading-url-input" type="url" placeholder="https://…" maxlength="300"/>
+        <button class="btn-primary" id="reading-add-btn">+</button>
+      </div>
+      <div class="reading-list" id="reading-list"></div>
+    </div>
+
+    <!-- 10. TO-DO -->
+    <div class="widget col-3">
+      <div class="widget-label"><span class="dot"></span>To-Do List <span class="kbd">T</span></div>
       <div class="todo-input-row">
-        <input
-          class="todo-input"
-          type="text"
-          id="todo-input"
-          placeholder="Add a new task…"
-          autocomplete="off"
-          maxlength="200"
-        />
-        <button class="btn-add" id="todo-add-btn">+ Add</button>
+        <input class="input-base" type="text" id="todo-input" placeholder="Add a task…" autocomplete="off" maxlength="200"/>
+        <button class="btn-primary" id="todo-add-btn">+ Add</button>
       </div>
-
-      <!-- Task list -->
       <ul class="todo-list" id="todo-list"></ul>
-
-      <!-- Progress & stats -->
-      <div class="todo-progress">
-        <div class="todo-progress-fill" id="todo-progress-fill" style="width:0%"></div>
-      </div>
+      <div class="todo-prog"><div class="todo-prog-fill" id="todo-prog-fill" style="width:0%"></div></div>
       <div class="todo-stats">
         <span id="todo-stats-text">0 tasks</span>
-        <button class="btn-clear-done" id="todo-clear-btn">Clear completed</button>
+        <button class="btn-clear" id="todo-clear-btn">Clear completed</button>
       </div>
+    </div>
+
+    <!-- 11. WORLD CLOCKS -->
+    <div class="widget col-1">
+      <div class="widget-label"><span class="dot"></span>World Clocks</div>
+      <div class="world-clocks" id="world-clocks"></div>
+    </div>
+
+    <!-- 12. MINI CALENDAR -->
+    <div class="widget col-2">
+      <div class="widget-label"><span class="dot yellow"></span>Calendar</div>
+      <div class="cal-header">
+        <button class="cal-nav" id="cal-prev">‹</button>
+        <div class="cal-month" id="cal-month-label"></div>
+        <button class="cal-nav" id="cal-next">›</button>
+      </div>
+      <div class="cal-grid" id="cal-grid"></div>
     </div>
 
   </main>
 
-  <!-- ============================================================
-       EDIT LINK MODAL — hidden by default, shown when ✎ clicked
-  ============================================================ -->
+  <!-- EDIT LINK MODAL -->
   <div class="modal-backdrop" id="edit-modal">
     <div class="modal">
       <h3>Edit Quick Link</h3>
-      <div class="modal-field">
-        <label>Label</label>
-        <input type="text" id="modal-label" placeholder="e.g. GitHub" maxlength="30" />
-      </div>
-      <div class="modal-field">
-        <label>URL</label>
-        <input type="url" id="modal-url" placeholder="https://…" />
-      </div>
-      <div class="modal-field">
-        <label>Icon (emoji)</label>
-        <input type="text" id="modal-icon" placeholder="e.g. 🐙" maxlength="4" />
-      </div>
+      <div class="modal-field"><label>Label</label><input type="text" id="modal-label" maxlength="30"/></div>
+      <div class="modal-field"><label>URL</label><input type="url" id="modal-url"/></div>
+      <div class="modal-field"><label>Icon (emoji)</label><input type="text" id="modal-icon" maxlength="4"/></div>
       <div class="modal-actions">
-        <button class="btn btn-ghost" id="modal-cancel">Cancel</button>
-        <button class="btn btn-primary" id="modal-save">Save</button>
+        <button class="btn-ghost" id="modal-cancel">Cancel</button>
+        <button class="btn-save" id="modal-save">Save</button>
       </div>
     </div>
   </div>
 
   <script>
-    /* ============================================================
-       SECTION 1: LIVE CLOCK
-       Updates every 1000ms using setInterval.
-       Formats time as HH:MM:SS and shows a full date string.
-    ============================================================ */
-    function updateClock() {
-      const now  = new Date();
-      const hh   = String(now.getHours()).padStart(2, '0');
-      const mm   = String(now.getMinutes()).padStart(2, '0');
-      const ss   = String(now.getSeconds()).padStart(2, '0');
+  /* ================================================================
+     UTILITIES
+  ================================================================ */
+  const $ = id => document.getElementById(id);
+  const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  const lsGet = (k, fb) => { try { const v = localStorage.getItem(k); return v !== null ? JSON.parse(v) : fb; } catch(_) { return fb; } };
+  const lsSet = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch(_) {} };
+  const pad   = n => String(n).padStart(2,'0');
 
-      document.getElementById('clock-time').textContent = `${hh}:${mm}:${ss}`;
+  /* ================================================================
+     SECTION 1: CLOCK + GREETING + WORLD CLOCKS
+     setInterval ticks every second. World clocks use Intl API.
+  ================================================================ */
+  const WORLD_ZONES = [
+    { city:'New York',  zone:'America/New_York'   },
+    { city:'London',    zone:'Europe/London'       },
+    { city:'Dubai',     zone:'Asia/Dubai'          },
+    { city:'Tokyo',     zone:'Asia/Tokyo'          },
+    { city:'São Paulo', zone:'America/Sao_Paulo'   },
+  ];
 
-      const dateOpts = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-      document.getElementById('clock-date').textContent =
-        now.toLocaleDateString(undefined, dateOpts);
-    }
+  function renderWorldClocks() {
+    $('world-clocks').innerHTML = WORLD_ZONES.map(z => `
+      <div class="wc-item">
+        <div><div class="wc-city">${z.city}</div><div class="wc-zone">${z.zone.replace('_',' ')}</div></div>
+        <div class="wc-time" data-zone="${z.zone}">--:--</div>
+      </div>`).join('');
+  }
 
-    // Run immediately and then every second
-    updateClock();
-    setInterval(updateClock, 1000);
-
-    // Dynamic greeting in the page header based on time of day
-    (function setGreeting() {
-      const h = new Date().getHours();
-      const g = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
-      document.getElementById('greeting').textContent = `— ${g}`;
-    })();
-
-
-    /* ============================================================
-       SECTION 2: MOTIVATIONAL QUOTES
-       One is picked randomly each time the page loads.
-       Add more objects to the array to expand the collection.
-    ============================================================ */
-    const QUOTES = [
-      { text: "The secret of getting ahead is getting started.", author: "Mark Twain" },
-      { text: "Do what you can, with what you have, where you are.", author: "Theodore Roosevelt" },
-      { text: "It always seems impossible until it's done.", author: "Nelson Mandela" },
-      { text: "Success is not final, failure is not fatal: it is the courage to continue that counts.", author: "Winston Churchill" },
-      { text: "The only way to do great work is to love what you do.", author: "Steve Jobs" },
-      { text: "In the middle of every difficulty lies opportunity.", author: "Albert Einstein" },
-      { text: "Believe you can and you're halfway there.", author: "Theodore Roosevelt" },
-      { text: "Your time is limited, don't waste it living someone else's life.", author: "Steve Jobs" },
-      { text: "The best time to plant a tree was 20 years ago. The second best time is now.", author: "Chinese Proverb" },
-      { text: "Whether you think you can or you think you can't, you're right.", author: "Henry Ford" },
-      { text: "You miss 100% of the shots you don't take.", author: "Wayne Gretzky" },
-      { text: "What we think, we become.", author: "Buddha" },
-    ];
-
-    // Pick a random quote and inject it into the DOM
-    (function loadQuote() {
-      const q = QUOTES[Math.floor(Math.random() * QUOTES.length)];
-      document.getElementById('quote-text').textContent   = q.text;
-      document.getElementById('quote-author').textContent = `— ${q.author}`;
-    })();
-
-
-    /* ============================================================
-       SECTION 3: QUICK LINKS
-       Default links are shown on first load.
-       Customisations are saved to localStorage under 'ql_links'.
-    ============================================================ */
-
-    // Default link data — edit these to change the initial links
-    const DEFAULT_LINKS = [
-      { label: 'Google',  url: 'https://google.com',  icon: '🔍' },
-      { label: 'GitHub',  url: 'https://github.com',  icon: '🐙' },
-      { label: 'YouTube', url: 'https://youtube.com', icon: '▶️' },
-      { label: 'Reddit',  url: 'https://reddit.com',  icon: '🤖' },
-    ];
-
-    const LS_LINKS_KEY = 'ql_links';
-
-    // Load links from localStorage, falling back to defaults
-    function loadLinks() {
-      try {
-        const saved = localStorage.getItem(LS_LINKS_KEY);
-        return saved ? JSON.parse(saved) : DEFAULT_LINKS;
-      } catch (_) {
-        return DEFAULT_LINKS;
-      }
-    }
-
-    function saveLinks(links) {
-      localStorage.setItem(LS_LINKS_KEY, JSON.stringify(links));
-    }
-
-    // Render all four link cards into the grid
-    function renderLinks() {
-      const links = loadLinks();
-      const grid  = document.getElementById('links-grid');
-      grid.innerHTML = '';
-
-      links.forEach((link, idx) => {
-        const card = document.createElement('a');
-        card.className   = 'link-card';
-        card.href        = link.url;
-        card.target      = '_blank';
-        card.rel         = 'noopener noreferrer';
-        card.innerHTML   = `
-          <span class="link-icon">${link.icon}</span>
-          <span class="link-label">${link.label}</span>
-          <button class="link-edit-btn" data-idx="${idx}" title="Edit">✎</button>
-        `;
-
-        // Prevent the anchor navigating when the edit button is clicked
-        card.querySelector('.link-edit-btn').addEventListener('click', e => {
-          e.preventDefault();
-          e.stopPropagation();
-          openEditModal(idx);
-        });
-
-        grid.appendChild(card);
-      });
-    }
-
-    // ── Edit Modal logic ──────────────────────────────────────
-    let editingIdx = null; // which link is currently being edited
-
-    function openEditModal(idx) {
-      const links = loadLinks();
-      const link  = links[idx];
-      document.getElementById('modal-label').value = link.label;
-      document.getElementById('modal-url').value   = link.url;
-      document.getElementById('modal-icon').value  = link.icon;
-      editingIdx = idx;
-      document.getElementById('edit-modal').classList.add('open');
-    }
-
-    function closeEditModal() {
-      document.getElementById('edit-modal').classList.remove('open');
-      editingIdx = null;
-    }
-
-    document.getElementById('modal-cancel').addEventListener('click', closeEditModal);
-    document.getElementById('edit-modal').addEventListener('click', e => {
-      // Close if clicking the backdrop (not the modal box itself)
-      if (e.target === e.currentTarget) closeEditModal();
+  function updateClock() {
+    const now = new Date();
+    $('clock-time').textContent = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+    $('clock-date').textContent = now.toLocaleDateString(undefined, { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+    $('header-date').textContent = now.toLocaleDateString(undefined, { month:'short', day:'numeric', year:'numeric' });
+    WORLD_ZONES.forEach(z => {
+      const el = document.querySelector(`[data-zone="${z.zone}"]`);
+      if (el) el.textContent = new Intl.DateTimeFormat('en-US', { hour:'2-digit', minute:'2-digit', hour12:true, timeZone:z.zone }).format(now);
     });
+  }
 
-    document.getElementById('modal-save').addEventListener('click', () => {
-      if (editingIdx === null) return;
-      const links   = loadLinks();
-      const label   = document.getElementById('modal-label').value.trim() || links[editingIdx].label;
-      const url     = document.getElementById('modal-url').value.trim()   || links[editingIdx].url;
-      const icon    = document.getElementById('modal-icon').value.trim()  || links[editingIdx].icon;
-      links[editingIdx] = { label, url, icon };
-      saveLinks(links);
-      renderLinks();
-      closeEditModal();
+  $('greeting').textContent = `— ${new Date().getHours() < 12 ? 'Good morning' : new Date().getHours() < 17 ? 'Good afternoon' : 'Good evening'}`;
+  renderWorldClocks();
+  updateClock();
+  setInterval(updateClock, 1000);
+
+  /* ================================================================
+     SECTION 2: MOTIVATIONAL QUOTES
+     15 quotes; refresh button picks a new random one each click.
+  ================================================================ */
+  const QUOTES = [
+    { text:"The secret of getting ahead is getting started.", author:"Mark Twain" },
+    { text:"Do what you can, with what you have, where you are.", author:"Theodore Roosevelt" },
+    { text:"It always seems impossible until it's done.", author:"Nelson Mandela" },
+    { text:"Success is not final, failure is not fatal: it is the courage to continue that counts.", author:"Winston Churchill" },
+    { text:"The only way to do great work is to love what you do.", author:"Steve Jobs" },
+    { text:"In the middle of every difficulty lies opportunity.", author:"Albert Einstein" },
+    { text:"Believe you can and you're halfway there.", author:"Theodore Roosevelt" },
+    { text:"Your time is limited, don't waste it living someone else's life.", author:"Steve Jobs" },
+    { text:"The best time to plant a tree was 20 years ago. The second best time is now.", author:"Chinese Proverb" },
+    { text:"Whether you think you can or you think you can't, you're right.", author:"Henry Ford" },
+    { text:"You miss 100% of the shots you don't take.", author:"Wayne Gretzky" },
+    { text:"What we think, we become.", author:"Buddha" },
+    { text:"An investment in knowledge pays the best interest.", author:"Benjamin Franklin" },
+    { text:"The future belongs to those who believe in the beauty of their dreams.", author:"Eleanor Roosevelt" },
+    { text:"It is during our darkest moments that we must focus to see the light.", author:"Aristotle" },
+  ];
+  let lastQIdx = -1;
+  function showQuote() {
+    let i; do { i = Math.floor(Math.random() * QUOTES.length); } while (i === lastQIdx);
+    lastQIdx = i;
+    $('quote-text').textContent   = QUOTES[i].text;
+    $('quote-author').textContent = `— ${QUOTES[i].author}`;
+  }
+  showQuote();
+  $('quote-refresh-btn').addEventListener('click', showQuote);
+
+  /* ================================================================
+     SECTION 3: WEATHER WIDGET
+     Open-Meteo API (free, no key) for weather data.
+     Nominatim (OpenStreetMap) for city geocoding.
+     Units: Fahrenheit / mph (Miami default).
+  ================================================================ */
+  const WMO_DESC  = {0:'Clear sky',1:'Mainly clear',2:'Partly cloudy',3:'Overcast',45:'Fog',48:'Icy fog',51:'Light drizzle',53:'Drizzle',55:'Heavy drizzle',61:'Light rain',63:'Rain',65:'Heavy rain',71:'Light snow',73:'Snow',75:'Heavy snow',77:'Snow grains',80:'Light showers',81:'Showers',82:'Heavy showers',85:'Snow showers',86:'Heavy snow showers',95:'Thunderstorm',96:'Thunderstorm + hail',99:'Thunderstorm + heavy hail'};
+  const WMO_ICONS = {0:'☀️',1:'🌤️',2:'⛅',3:'☁️',45:'🌫️',48:'🌫️',51:'🌦️',53:'🌦️',55:'🌧️',61:'🌧️',63:'🌧️',65:'🌧️',71:'🌨️',73:'❄️',75:'❄️',77:'❄️',80:'🌦️',81:'🌧️',82:'⛈️',85:'🌨️',86:'🌨️',95:'⛈️',96:'⛈️',99:'⛈️'};
+
+  async function geocode(city) {
+    const r = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(city)}&format=json&limit=1`,{headers:{'Accept-Language':'en'}});
+    const d = await r.json();
+    if (!d.length) throw new Error('not found');
+    return { lat: parseFloat(d[0].lat), lon: parseFloat(d[0].lon), name: d[0].display_name.split(',')[0] };
+  }
+
+  async function getWeather(lat, lon) {
+    const r = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,weather_code&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=auto`);
+    return await r.json();
+  }
+
+  function showWeather(name, d) {
+    const c = d.current, code = c.weather_code;
+    $('weather-content').innerHTML = `
+      <div class="weather-main">
+        <div class="weather-icon">${WMO_ICONS[code]||'🌡️'}</div>
+        <div>
+          <div class="weather-temp">${Math.round(c.temperature_2m)}°F</div>
+          <div class="weather-desc">${WMO_DESC[code]||'Unknown'} · ${name}</div>
+        </div>
+      </div>
+      <div class="weather-meta">
+        <div class="weather-meta-item">Feels <span>${Math.round(c.apparent_temperature)}°F</span></div>
+        <div class="weather-meta-item">Humidity <span>${c.relative_humidity_2m}%</span></div>
+        <div class="weather-meta-item">Wind <span>${Math.round(c.wind_speed_10m)} mph</span></div>
+      </div>`;
+  }
+
+  async function loadWeather(city) {
+    $('weather-content').innerHTML = '<div class="weather-msg">Fetching weather…</div>';
+    try {
+      const geo = await geocode(city);
+      const data = await getWeather(geo.lat, geo.lon);
+      lsSet('ql_wcity', city);
+      showWeather(geo.name, data);
+    } catch(_) {
+      $('weather-content').innerHTML = `<div class="weather-msg" style="color:var(--danger)">Could not load weather for "${esc(city)}".</div>`;
+    }
+  }
+
+  loadWeather(lsGet('ql_wcity','Miami'));
+  $('weather-city-btn').addEventListener('click', () => {
+    const v = $('weather-city-input').value.trim();
+    if (v) { loadWeather(v); $('weather-city-input').value=''; }
+  });
+  $('weather-city-input').addEventListener('keydown', e => {
+    if (e.key==='Enter') { const v=$('weather-city-input').value.trim(); if(v){loadWeather(v);$('weather-city-input').value='';} }
+  });
+
+  /* ================================================================
+     SECTION 4: QUICK LINKS
+     5 customisable links with emoji icons, saved to localStorage.
+     Click ✎ (pencil) on hover to edit any card.
+  ================================================================ */
+  const DEFAULT_LINKS = [
+    {label:'Google',   url:'https://google.com',   icon:'🔍'},
+    {label:'LinkedIn', url:'https://linkedin.com', icon:'💼'},
+    {label:'GitHub',   url:'https://github.com',   icon:'🐙'},
+    {label:'YouTube',  url:'https://youtube.com',  icon:'▶️'},
+    {label:'Reddit',   url:'https://reddit.com',   icon:'🤖'},
+  ];
+  const loadLinks = () => lsGet('ql_links', DEFAULT_LINKS);
+  const saveLinks = l => lsSet('ql_links', l);
+
+  function renderLinks() {
+    const links = loadLinks();
+    $('links-grid').innerHTML = '';
+    links.forEach((link, idx) => {
+      const card = document.createElement('a');
+      card.className = 'link-card';
+      card.href = link.url; card.target='_blank'; card.rel='noopener noreferrer';
+      card.innerHTML = `<span class="link-icon">${link.icon}</span><span class="link-label">${esc(link.label)}</span><button class="link-edit-btn" data-idx="${idx}">✎</button>`;
+      card.querySelector('.link-edit-btn').addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); openModal(idx); });
+      $('links-grid').appendChild(card);
     });
+  }
 
-    renderLinks(); // Initial render
+  let editIdx = null;
+  function openModal(idx) {
+    const l = loadLinks()[idx];
+    $('modal-label').value=l.label; $('modal-url').value=l.url; $('modal-icon').value=l.icon;
+    editIdx = idx; $('edit-modal').classList.add('open');
+  }
+  const closeModal = () => { $('edit-modal').classList.remove('open'); editIdx=null; };
+  $('modal-cancel').addEventListener('click', closeModal);
+  $('edit-modal').addEventListener('click', e => { if(e.target===e.currentTarget) closeModal(); });
+  $('modal-save').addEventListener('click', () => {
+    if(editIdx===null) return;
+    const links=loadLinks();
+    links[editIdx]={ label:$('modal-label').value.trim()||links[editIdx].label, url:$('modal-url').value.trim()||links[editIdx].url, icon:$('modal-icon').value.trim()||links[editIdx].icon };
+    saveLinks(links); renderLinks(); closeModal();
+  });
+  renderLinks();
 
+  /* ================================================================
+     SECTION 5: NEWS FEED
+     Uses rss2json.com free proxy to parse RSS feeds from:
+     Reuters, Politico, BBC Tech, The Verge (AI), MIT Tech Review.
+     Shows 3 headlines per source with inline summary snippet.
+     Tab-based navigation; results cached per session.
+  ================================================================ */
+  const NEWS_SOURCES = [
+    {id:'reuters',  label:'Reuters',         url:'https://feeds.reuters.com/reuters/topNews'},
+    {id:'politico', label:'Politico',        url:'https://www.politico.com/rss/politicopicks.xml'},
+    {id:'bbc',      label:'BBC Tech',        url:'http://feeds.bbci.co.uk/news/technology/rss.xml'},
+    {id:'verge',    label:'The Verge / AI',  url:'https://www.theverge.com/ai-artificial-intelligence/rss/index.xml'},
+    {id:'mit',      label:'MIT Tech Review', url:'https://www.technologyreview.com/feed/'},
+  ];
+  const newsCache = {};
+  let activeTab = NEWS_SOURCES[0].id;
 
-    /* ============================================================
-       SECTION 4: TO-DO LIST
-       Tasks are stored as an array of { id, text, done } objects
-       in localStorage under 'ql_todos'. The list re-renders every
-       time the state changes.
-    ============================================================ */
-    const LS_TODOS_KEY = 'ql_todos';
+  function stripHtml(h) { const d=document.createElement('div'); d.innerHTML=h; return d.textContent||d.innerText||''; }
+  function timeAgo(ds) {
+    const s=(Date.now()-new Date(ds))/1000;
+    if(s<3600) return `${Math.floor(s/60)}m ago`;
+    if(s<86400) return `${Math.floor(s/3600)}h ago`;
+    return `${Math.floor(s/86400)}d ago`;
+  }
 
-    function loadTodos() {
-      try {
-        const saved = localStorage.getItem(LS_TODOS_KEY);
-        return saved ? JSON.parse(saved) : [];
-      } catch (_) {
-        return [];
-      }
+  async function fetchFeed(src) {
+    if(newsCache[src.id]) return newsCache[src.id];
+    const r = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(src.url)}&count=3`);
+    const d = await r.json();
+    if(d.status!=='ok') throw new Error('feed error');
+    newsCache[src.id]=d.items;
+    return d.items;
+  }
+
+  function renderNewsItems(items) {
+    if(!items||!items.length){ $('news-content').innerHTML='<div class="news-err">No articles found.</div>'; return; }
+    $('news-content').innerHTML='<div class="news-list">'+items.map(item => {
+      const summary=stripHtml(item.description||'').slice(0,260).trim();
+      const ago=item.pubDate?timeAgo(item.pubDate):'';
+      return `<div class="news-item">
+        <div class="news-item-header">
+          <div class="news-title"><a href="${esc(item.link)}" target="_blank" rel="noopener">${esc(item.title)}</a></div>
+          <div class="news-date">${ago}</div>
+        </div>
+        ${summary?`<div class="news-summary">${esc(summary)}…</div>`:''}
+        <a class="news-read-more" href="${esc(item.link)}" target="_blank" rel="noopener">Read full article →</a>
+      </div>`;
+    }).join('')+'</div>';
+  }
+
+  async function loadTab(id) {
+    activeTab=id;
+    document.querySelectorAll('.news-tab').forEach(t=>t.classList.toggle('active',t.dataset.id===id));
+    $('news-content').innerHTML='<div class="news-msg">Loading headlines…</div>';
+    try { renderNewsItems(await fetchFeed(NEWS_SOURCES.find(s=>s.id===id))); }
+    catch(_) { $('news-content').innerHTML='<div class="news-err">Could not load feed. Check your connection or try another source.</div>'; }
+  }
+
+  function renderTabs() {
+    $('news-tabs').innerHTML=NEWS_SOURCES.map(s=>`<button class="news-tab${s.id===activeTab?' active':''}" data-id="${s.id}">${s.label}</button>`).join('');
+    document.querySelectorAll('.news-tab').forEach(b=>b.addEventListener('click',()=>loadTab(b.dataset.id)));
+  }
+  renderTabs();
+  loadTab(activeTab);
+
+  /* ================================================================
+     SECTION 6: POMODORO TIMER
+     25-min focus / 5-min break / 15-min long break after 4 sessions.
+     SVG ring animated via stroke-dashoffset. Web Audio API beep on finish.
+  ================================================================ */
+  const P_WORK=25*60, P_BREAK=5*60, P_LONG=15*60, P_SESSIONS=4;
+  const CIRC=2*Math.PI*58;
+  let pomo={ remaining:P_WORK, running:false, isBreak:false, done:0, timer:null };
+
+  function renderPomo() {
+    const { remaining, isBreak, done } = pomo;
+    const total = isBreak ? (done>0&&done%P_SESSIONS===0?P_LONG:P_BREAK) : P_WORK;
+    $('pomo-ring').style.strokeDashoffset = CIRC*(1-(remaining/total));
+    $('pomo-ring').classList.toggle('break-mode', isBreak);
+    $('pomo-display').textContent = `${pad(Math.floor(remaining/60))}:${pad(remaining%60)}`;
+    $('pomo-mode').textContent = isBreak?'BREAK':'FOCUS';
+    const sess = (done%P_SESSIONS)+(isBreak?0:1);
+    $('pomo-session-count').textContent = `Session ${Math.min(sess,P_SESSIONS)} of ${P_SESSIONS}`;
+    $('pomo-dots').innerHTML = Array.from({length:P_SESSIONS},(_,i)=>`<div class="pomo-dot${i<(done%P_SESSIONS)?' done':''}"></div>`).join('');
+  }
+
+  function pomoBeep() {
+    try {
+      const ctx=new(window.AudioContext||window.webkitAudioContext)();
+      const osc=ctx.createOscillator(), g=ctx.createGain();
+      osc.connect(g); g.connect(ctx.destination);
+      osc.frequency.value=660; osc.type='sine';
+      g.gain.setValueAtTime(0.3,ctx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+1);
+      osc.start(); osc.stop(ctx.currentTime+1);
+    } catch(_){}
+  }
+
+  function pomoTick() {
+    if(pomo.remaining<=0) {
+      pomoBeep();
+      if(!pomo.isBreak){ pomo.done++; pomo.isBreak=true; pomo.remaining=pomo.done%P_SESSIONS===0?P_LONG:P_BREAK; }
+      else { pomo.isBreak=false; pomo.remaining=P_WORK; }
+    } else { pomo.remaining--; }
+    renderPomo();
+  }
+
+  function togglePomo() {
+    if(pomo.running){ clearInterval(pomo.timer); pomo.running=false; $('pomo-start').textContent='Start'; $('pomo-start').classList.remove('active'); }
+    else { pomo.timer=setInterval(pomoTick,1000); pomo.running=true; $('pomo-start').textContent='Pause'; $('pomo-start').classList.add('active'); }
+  }
+  function resetPomo() {
+    clearInterval(pomo.timer);
+    pomo={ remaining:P_WORK, running:false, isBreak:false, done:0, timer:null };
+    $('pomo-start').textContent='Start'; $('pomo-start').classList.remove('active');
+    renderPomo();
+  }
+  $('pomo-start').addEventListener('click', togglePomo);
+  $('pomo-reset').addEventListener('click', resetPomo);
+  renderPomo();
+
+  /* ================================================================
+     SECTION 7: NOTES SCRATCHPAD
+     Auto-saves to localStorage 800ms after typing stops (debounce).
+     Shows char count and a brief "saved" confirmation flash.
+  ================================================================ */
+  const notesEl = $('notes-area');
+  notesEl.value = lsGet('ql_notes','');
+  $('notes-char-count').textContent = `${notesEl.value.length} chars`;
+  let notesTimer=null;
+  notesEl.addEventListener('input', () => {
+    $('notes-char-count').textContent=`${notesEl.value.length} chars`;
+    $('notes-saved-label').style.opacity='0';
+    clearTimeout(notesTimer);
+    notesTimer=setTimeout(()=>{
+      lsSet('ql_notes',notesEl.value);
+      const l=$('notes-saved-label'); l.style.opacity='1';
+      setTimeout(()=>l.style.opacity='0',1500);
+    },800);
+  });
+
+  /* ================================================================
+     SECTION 8: HABIT TRACKER
+     Habit definitions stored as { id, name, streak }.
+     Daily completion stored under a date-keyed localStorage entry
+     so it auto-resets each morning without manual intervention.
+  ================================================================ */
+  const DEFAULT_HABITS=[
+    {id:1,name:'🏃 Exercise',streak:0},{id:2,name:'📖 Read 20 mins',streak:0},
+    {id:3,name:'💧 Drink 8 glasses',streak:0},{id:4,name:'🧘 Meditate',streak:0},
+  ];
+  const loadHabits=()=>lsGet('ql_habits',DEFAULT_HABITS);
+  const saveHabits=h=>lsSet('ql_habits',h);
+  const doneKey=()=>{ const d=new Date(); return `ql_hdone_${d.getFullYear()}_${d.getMonth()}_${d.getDate()}`; };
+  const loadDone=()=>lsGet(doneKey(),[]);
+  const saveDone=d=>lsSet(doneKey(),d);
+
+  function renderHabits() {
+    const habits=loadHabits(), done=loadDone();
+    $('habit-list').innerHTML=habits.map(h=>`
+      <div class="habit-item${done.includes(h.id)?' checked':''}" data-hid="${h.id}">
+        <div class="habit-cb"></div>
+        <span class="habit-name">${esc(h.name)}</span>
+        <span class="habit-streak">${h.streak>0?'🔥 '+h.streak:''}</span>
+        <button class="todo-del" data-hdel="${h.id}">✕</button>
+      </div>`).join('');
+    const pct=habits.length?Math.round((done.length/habits.length)*100):0;
+    $('habit-prog-fill').style.width=`${pct}%`;
+    $('habit-prog-label').textContent=`${done.length} / ${habits.length} completed today`;
+  }
+
+  $('habit-list').addEventListener('click', e => {
+    const del=e.target.closest('[data-hdel]');
+    const item=e.target.closest('[data-hid]');
+    if(del){ e.stopPropagation();
+      const id=Number(del.dataset.hdel);
+      saveHabits(loadHabits().filter(h=>h.id!==id));
+      saveDone(loadDone().filter(x=>x!==id)); renderHabits(); return;
     }
-
-    function saveTodos(todos) {
-      localStorage.setItem(LS_TODOS_KEY, JSON.stringify(todos));
+    if(item){
+      const id=Number(item.dataset.hid); const done=loadDone(); const idx=done.indexOf(id);
+      const habits=loadHabits(); const h=habits.find(x=>x.id===id);
+      if(idx===-1){ done.push(id); if(h)h.streak++; }
+      else { done.splice(idx,1); if(h&&h.streak>0)h.streak--; }
+      saveHabits(habits); saveDone(done); renderHabits();
     }
+  });
 
-    // Render the task list from current localStorage state
-    function renderTodos() {
-      const todos = loadTodos();
-      const list  = document.getElementById('todo-list');
-      list.innerHTML = '';
+  function addHabit(){ const v=$('habit-input').value.trim(); if(!v) return; const habits=loadHabits(); habits.push({id:Date.now(),name:v,streak:0}); saveHabits(habits); renderHabits(); $('habit-input').value=''; }
+  $('habit-add-btn').addEventListener('click',addHabit);
+  $('habit-input').addEventListener('keydown',e=>{ if(e.key==='Enter')addHabit(); });
+  renderHabits();
 
-      if (todos.length === 0) {
-        list.innerHTML = `<div class="todo-empty">No tasks yet — add one above ✦</div>`;
-      } else {
-        todos.forEach(todo => {
-          const li = document.createElement('li');
-          li.className = `todo-item${todo.done ? ' done' : ''}`;
-          li.innerHTML = `
-            <div class="todo-check" data-id="${todo.id}" role="checkbox" aria-checked="${todo.done}" tabindex="0"></div>
-            <span class="todo-text">${escapeHtml(todo.text)}</span>
-            <button class="todo-delete" data-id="${todo.id}" title="Delete task">✕</button>
-          `;
-          list.appendChild(li);
-        });
-      }
+  /* ================================================================
+     SECTION 9: READING LIST
+     Stores { id, title, url, read } items in localStorage.
+     Mark as read with the checkbox; delete with ✕.
+  ================================================================ */
+  const loadReading=()=>lsGet('ql_reading',[]);
+  const saveReading=r=>lsSet('ql_reading',r);
 
-      updateTodoStats(todos);
+  function renderReading() {
+    const items=loadReading();
+    if(!items.length){ $('reading-list').innerHTML='<div class="reading-empty">No saved links yet ✦</div>'; return; }
+    $('reading-list').innerHTML=items.map(it=>`
+      <div class="reading-item${it.read?' read':''}">
+        <div class="reading-cb" data-rid="${it.id}"></div>
+        <div class="reading-info">
+          <div class="reading-title"><a href="${esc(it.url)}" target="_blank" rel="noopener">${esc(it.title)}</a></div>
+          <div class="reading-url">${esc(it.url)}</div>
+        </div>
+        <button class="reading-del" data-rdel="${it.id}">✕</button>
+      </div>`).join('');
+  }
+
+  $('reading-list').addEventListener('click', e=>{
+    const cb=e.target.closest('[data-rid]'), del=e.target.closest('[data-rdel]');
+    if(cb){ const items=loadReading(); const it=items.find(x=>x.id===Number(cb.dataset.rid)); if(it)it.read=!it.read; saveReading(items); renderReading(); }
+    if(del){ saveReading(loadReading().filter(x=>x.id!==Number(del.dataset.rdel))); renderReading(); }
+  });
+
+  function addReading(){
+    const title=$('reading-title-input').value.trim(), url=$('reading-url-input').value.trim();
+    if(!title||!url) return;
+    const items=loadReading(); items.unshift({id:Date.now(),title,url,read:false});
+    saveReading(items); renderReading();
+    $('reading-title-input').value=''; $('reading-url-input').value='';
+  }
+  $('reading-add-btn').addEventListener('click',addReading);
+  $('reading-url-input').addEventListener('keydown',e=>{ if(e.key==='Enter')addReading(); });
+  renderReading();
+
+  /* ================================================================
+     SECTION 10: TO-DO LIST
+     Tasks as { id, text, done } saved in localStorage.
+     Progress bar tracks completion percentage.
+  ================================================================ */
+  const loadTodos=()=>lsGet('ql_todos',[]);
+  const saveTodos=t=>lsSet('ql_todos',t);
+
+  function renderTodos(){
+    const todos=loadTodos();
+    if(!todos.length){ $('todo-list').innerHTML='<div class="todo-empty">No tasks yet — add one above ✦</div>'; }
+    else { $('todo-list').innerHTML=todos.map(t=>`<li class="todo-item${t.done?' done':''}"><div class="todo-cb" data-tid="${t.id}" role="checkbox" tabindex="0"></div><span class="todo-text">${esc(t.text)}</span><button class="todo-del" data-tdel="${t.id}">✕</button></li>`).join(''); }
+    const done=todos.filter(t=>t.done).length, total=todos.length, pct=total?Math.round((done/total)*100):0;
+    $('todo-prog-fill').style.width=`${pct}%`;
+    $('todo-stats-text').textContent=total?`${done} / ${total} completed`:'0 tasks';
+  }
+
+  $('todo-list').addEventListener('click',e=>{
+    const cb=e.target.closest('[data-tid]'), del=e.target.closest('[data-tdel]');
+    if(cb){ const todos=loadTodos(); const t=todos.find(x=>x.id===Number(cb.dataset.tid)); if(t)t.done=!t.done; saveTodos(todos); renderTodos(); }
+    if(del){ saveTodos(loadTodos().filter(x=>x.id!==Number(del.dataset.tdel))); renderTodos(); }
+  });
+
+  function addTodo(){ const v=$('todo-input').value.trim(); if(!v)return; const todos=loadTodos(); todos.push({id:Date.now(),text:v,done:false}); saveTodos(todos); renderTodos(); $('todo-input').value=''; }
+  $('todo-add-btn').addEventListener('click',addTodo);
+  $('todo-input').addEventListener('keydown',e=>{ if(e.key==='Enter')addTodo(); });
+  $('todo-clear-btn').addEventListener('click',()=>{ saveTodos(loadTodos().filter(t=>!t.done)); renderTodos(); });
+  renderTodos();
+
+  /* ================================================================
+     SECTION 11: MINI CALENDAR
+     Pure JS — no dependencies. Navigate with ‹ / › arrows.
+     Today's date is always highlighted in accent blue.
+  ================================================================ */
+  const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const DAYS=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  let calY, calM;
+  (()=>{ const n=new Date(); calY=n.getFullYear(); calM=n.getMonth(); renderCal(); })();
+
+  function renderCal(){
+    const today=new Date(); $('cal-month-label').textContent=`${MONTHS[calM]} ${calY}`;
+    const firstDay=new Date(calY,calM,1).getDay(), dim=new Date(calY,calM+1,0).getDate(), diPrev=new Date(calY,calM,0).getDate();
+    let h=DAYS.map(d=>`<div class="cal-dow">${d}</div>`).join('');
+    for(let i=firstDay-1;i>=0;i--) h+=`<div class="cal-day other-month">${diPrev-i}</div>`;
+    for(let d=1;d<=dim;d++){
+      const iT=d===today.getDate()&&calM===today.getMonth()&&calY===today.getFullYear();
+      h+=`<div class="cal-day${iT?' today':''}">${d}</div>`;
     }
+    const rem=((firstDay+dim)%7===0)?0:7-((firstDay+dim)%7);
+    for(let d=1;d<=rem;d++) h+=`<div class="cal-day other-month">${d}</div>`;
+    $('cal-grid').innerHTML=h;
+  }
+  $('cal-prev').addEventListener('click',()=>{ calM--; if(calM<0){calM=11;calY--;} renderCal(); });
+  $('cal-next').addEventListener('click',()=>{ calM++; if(calM>11){calM=0;calY++;} renderCal(); });
 
-    // Escape user text to prevent XSS
-    function escapeHtml(str) {
-      return str
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;');
-    }
-
-    // Update the progress bar and stats line
-    function updateTodoStats(todos) {
-      const total = todos.length;
-      const done  = todos.filter(t => t.done).length;
-      const pct   = total ? Math.round((done / total) * 100) : 0;
-
-      document.getElementById('todo-progress-fill').style.width = `${pct}%`;
-      document.getElementById('todo-stats-text').textContent =
-        total === 0 ? '0 tasks' : `${done} / ${total} completed`;
-    }
-
-    // Add a new task
-    function addTodo() {
-      const input = document.getElementById('todo-input');
-      const text  = input.value.trim();
-      if (!text) return;
-
-      const todos = loadTodos();
-      todos.push({ id: Date.now(), text, done: false });
-      saveTodos(todos);
-      renderTodos();
-      input.value = '';
-      input.focus();
-    }
-
-    // Toggle a task's done state
-    function toggleTodo(id) {
-      const todos = loadTodos();
-      const todo  = todos.find(t => t.id === id);
-      if (todo) todo.done = !todo.done;
-      saveTodos(todos);
-      renderTodos();
-    }
-
-    // Delete a task by id
-    function deleteTodo(id) {
-      const todos = loadTodos().filter(t => t.id !== id);
-      saveTodos(todos);
-      renderTodos();
-    }
-
-    // ── Event delegation on the list (handles check + delete) ──
-    document.getElementById('todo-list').addEventListener('click', e => {
-      const checkEl = e.target.closest('.todo-check');
-      const delEl   = e.target.closest('.todo-delete');
-
-      if (checkEl) toggleTodo(Number(checkEl.dataset.id));
-      if (delEl)   deleteTodo(Number(delEl.dataset.id));
-    });
-
-    // Keyboard accessibility for checkboxes
-    document.getElementById('todo-list').addEventListener('keydown', e => {
-      if ((e.key === ' ' || e.key === 'Enter') && e.target.classList.contains('todo-check')) {
-        e.preventDefault();
-        toggleTodo(Number(e.target.dataset.id));
-      }
-    });
-
-    // Add via button click
-    document.getElementById('todo-add-btn').addEventListener('click', addTodo);
-
-    // Add via Enter key in input
-    document.getElementById('todo-input').addEventListener('keydown', e => {
-      if (e.key === 'Enter') addTodo();
-    });
-
-    // Clear all completed tasks
-    document.getElementById('todo-clear-btn').addEventListener('click', () => {
-      const todos = loadTodos().filter(t => !t.done);
-      saveTodos(todos);
-      renderTodos();
-    });
-
-    renderTodos(); // Initial render
+  /* ================================================================
+     SECTION 12: KEYBOARD SHORTCUTS
+     T → focus To-Do input
+     N → focus Notes scratchpad
+     P → toggle Pomodoro start/pause
+     (Only fires when NOT typing in an input/textarea)
+  ================================================================ */
+  document.addEventListener('keydown', e => {
+    if(['INPUT','TEXTAREA'].includes(e.target.tagName)) return;
+    if(e.key==='t'||e.key==='T') $('todo-input').focus();
+    if(e.key==='n'||e.key==='N') $('notes-area').focus();
+    if(e.key==='p'||e.key==='P') togglePomo();
+  });
   </script>
 </body>
 </html>
