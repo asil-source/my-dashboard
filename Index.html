@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Personal Dashboard</title>
+
+  <!-- ============================================================
+       FONTS — Loaded from Google Fonts CDN for unique typography.
+       "Syne" for headings: geometric, confident.
+       "DM Mono" for the clock: monospaced, precise.
+       "DM Sans" for body text: clean and modern.
+  ============================================================ -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+
+  <style>
+    /* ============================================================
+       CSS VARIABLES — Central design tokens for the dark theme.
+       Changing these values will update the whole dashboard.
+    ============================================================ */
+    :root {
+      --bg:        #0c0d10;
+      --surface:   #13151a;
+      --surface2:  #1c1f28;
+      --border:    #252830;
+      --accent:    #5b6af5;
+      --accent2:   #e05c8a;
+      --text:      #e8eaf0;
+      --muted:     #6b7080;
+      --success:   #3ecf8e;
+      --danger:    #f06060;
+      --radius:    14px;
+      --shadow:    0 4px 32px rgba(0,0,0,0.5);
+    }
+
+    /* ============================================================
+       RESET & BASE STYLES
+    ============================================================ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      min-height: 100vh;
+      padding: 32px 20px 60px;
+      background-image:
+        radial-gradient(ellipse 70% 40% at 80% 0%, rgba(91,106,245,0.08) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 30% at 10% 90%, rgba(224,92,138,0.06) 0%, transparent 60%);
+    }
+
+    /* ============================================================
+       LAYOUT — Responsive CSS grid: 2 cols on wide, 1 col on mobile.
+    ============================================================ */
+    .page-header {
+      max-width: 960px;
+      margin: 0 auto 36px;
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+    }
+    .page-header h1 {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: clamp(1.4rem, 3vw, 1.9rem);
+      letter-spacing: -0.02em;
+      color: var(--text);
+    }
+    .page-header span {
+      color: var(--muted);
+      font-size: 0.85rem;
+      font-family: 'DM Mono', monospace;
+    }
+
+    .grid {
+      max-width: 960px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: auto auto auto;
+      gap: 20px;
+    }
+
+    /* Stack to single column on narrow screens */
+    @media (max-width: 680px) {
+      .grid { grid-template-columns: 1fr; }
+      .widget-clock { grid-column: 1; }
+      .widget-quote  { grid-column: 1; }
+    }
+
+    /* Clock and quote span full width at top */
+    .widget-clock { grid-column: 1; }
+    .widget-quote  { grid-column: 2; }
+    .widget-links  { grid-column: 1 / -1; }
+    .widget-todo   { grid-column: 1 / -1; }
+
+    /* ============================================================
+       WIDGET BASE CARD — shared card styles
+    ============================================================ */
+    .widget {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px;
+      box-shadow: var(--shadow);
+      animation: fadeUp 0.5s ease both;
+    }
+    .widget:nth-child(1) { animation-delay: 0.05s; }
+    .widget:nth-child(2) { animation-delay: 0.10s; }
+    .widget:nth-child(3) { animation-delay: 0.15s; }
+    .widget:nth-child(4) { animation-delay: 0.20s; }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(18px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .widget-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.68rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 18px;
+    }
+
+    /* ============================================================
+       CLOCK WIDGET — Updates every second via setInterval.
+    ============================================================ */
+    .clock-time {
+      font-family: 'DM Mono', monospace;
+      font-size: clamp(2.4rem, 7vw, 3.6rem);
+      font-weight: 500;
+      letter-spacing: -0.04em;
+      color: var(--text);
+      line-height: 1;
+      margin-bottom: 8px;
+      /* Subtle gradient shimmer on the time digits */
+      background: linear-gradient(135deg, var(--text) 60%, var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .clock-date {
+      font-size: 0.9rem;
+      color: var(--muted);
+      letter-spacing: 0.02em;
+    }
+
+    /* ============================================================
+       QUOTE WIDGET — Random quote chosen at page load.
+    ============================================================ */
+    .quote-text {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(0.95rem, 2vw, 1.1rem);
+      font-weight: 400;
+      line-height: 1.65;
+      color: var(--text);
+      margin-bottom: 14px;
+      font-style: italic;
+    }
+    .quote-text::before { content: '\201C'; color: var(--accent); font-style: normal; margin-right: 2px; }
+    .quote-text::after  { content: '\201D'; color: var(--accent); font-style: normal; margin-left: 2px; }
+
+    .quote-author {
+      font-size: 0.8rem;
+      color: var(--muted);
+      font-family: 'DM Mono', monospace;
+    }
+
+    /* ============================================================
+       QUICK LINKS WIDGET — 4 customisable button links.
+       Click the pencil icon to edit label & URL.
+    ============================================================ */
+    .links-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+    @media (max-width: 500px) {
+      .links-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    .link-card {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 18px 10px;
+      text-decoration: none;
+      color: var(--text);
+      font-size: 0.82rem;
+      font-weight: 500;
+      transition: border-color 0.2s, transform 0.15s, background 0.2s;
+      cursor: pointer;
+      overflow: hidden;
+      min-height: 90px;
+    }
+    .link-card:hover {
+      border-color: var(--accent);
+      background: rgba(91,106,245,0.08);
+      transform: translateY(-2px);
+    }
+    .link-card .link-icon {
+      font-size: 1.5rem;
+      line-height: 1;
+    }
+    .link-card .link-label {
+      text-align: center;
+      word-break: break-word;
+      line-height: 1.3;
+    }
+
+    /* Edit button (pencil) shown on hover */
+    .link-edit-btn {
+      position: absolute;
+      top: 6px; right: 6px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--muted);
+      font-size: 0.7rem;
+      padding: 2px 5px;
+      cursor: pointer;
+      opacity: 0;
+      transition: opacity 0.15s;
+      line-height: 1.4;
+    }
+    .link-card:hover .link-edit-btn { opacity: 1; }
+    .link-edit-btn:hover { color: var(--accent); border-color: var(--accent); }
+
+    /* ============================================================
+       EDIT MODAL — Inline modal for editing link label/URL.
+    ============================================================ */
+    .modal-backdrop {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(4px);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-backdrop.open { display: flex; }
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px;
+      width: 340px;
+      box-shadow: var(--shadow);
+      animation: fadeUp 0.2s ease;
+    }
+    .modal h3 {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.05rem;
+      margin-bottom: 20px;
+    }
+    .modal-field { margin-bottom: 14px; }
+    .modal-field label {
+      display: block;
+      font-size: 0.78rem;
+      color: var(--muted);
+      font-family: 'DM Mono', monospace;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+    .modal-field input {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.9rem;
+      padding: 10px 12px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .modal-field input:focus { border-color: var(--accent); }
+    .modal-actions {
+      display: flex; gap: 10px; margin-top: 20px;
+    }
+    .btn {
+      flex: 1;
+      padding: 10px;
+      border-radius: 8px;
+      border: none;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.88rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: opacity 0.15s, transform 0.12s;
+    }
+    .btn:hover { opacity: 0.88; transform: translateY(-1px); }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-ghost {
+      background: var(--surface2);
+      color: var(--muted);
+      border: 1px solid var(--border);
+    }
+
+    /* ============================================================
+       TO-DO WIDGET — Add, check off, and delete tasks.
+       State persisted to localStorage.
+    ============================================================ */
+    .todo-input-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .todo-input {
+      flex: 1;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.92rem;
+      padding: 11px 14px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .todo-input:focus { border-color: var(--accent); }
+    .todo-input::placeholder { color: var(--muted); }
+
+    .btn-add {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 11px 20px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: opacity 0.15s, transform 0.12s;
+      white-space: nowrap;
+    }
+    .btn-add:hover { opacity: 0.88; transform: translateY(-1px); }
+
+    /* The task list itself */
+    .todo-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 340px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+    /* Custom scrollbar */
+    .todo-list::-webkit-scrollbar { width: 4px; }
+    .todo-list::-webkit-scrollbar-track { background: transparent; }
+    .todo-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+
+    .todo-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 14px;
+      transition: opacity 0.2s;
+    }
+    .todo-item.done { opacity: 0.4; }
+    .todo-item.done .todo-text { text-decoration: line-through; color: var(--muted); }
+
+    /* Custom checkbox */
+    .todo-check {
+      width: 18px; height: 18px;
+      min-width: 18px;
+      border: 2px solid var(--border);
+      border-radius: 5px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.15s, border-color 0.15s;
+      background: transparent;
+    }
+    .todo-item.done .todo-check {
+      background: var(--success);
+      border-color: var(--success);
+    }
+    .todo-check::after {
+      content: '✓';
+      color: #fff;
+      font-size: 0.72rem;
+      font-weight: 700;
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+    .todo-item.done .todo-check::after { opacity: 1; }
+
+    .todo-text {
+      flex: 1;
+      font-size: 0.92rem;
+      line-height: 1.4;
+      word-break: break-word;
+    }
+
+    .todo-delete {
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 1rem;
+      cursor: pointer;
+      padding: 2px 4px;
+      border-radius: 4px;
+      transition: color 0.15s, background 0.15s;
+      line-height: 1;
+    }
+    .todo-delete:hover { color: var(--danger); background: rgba(240,96,96,0.1); }
+
+    .todo-empty {
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.85rem;
+      padding: 28px 0;
+      font-family: 'DM Mono', monospace;
+    }
+
+    /* Task stats bar */
+    .todo-stats {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 14px;
+      font-size: 0.78rem;
+      color: var(--muted);
+      font-family: 'DM Mono', monospace;
+    }
+    .btn-clear-done {
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-family: 'DM Mono', monospace;
+      cursor: pointer;
+      padding: 2px 6px;
+      border-radius: 4px;
+      transition: color 0.15s, background 0.15s;
+    }
+    .btn-clear-done:hover { color: var(--danger); background: rgba(240,96,96,0.08); }
+
+    /* Progress bar */
+    .todo-progress {
+      height: 3px;
+      background: var(--border);
+      border-radius: 99px;
+      margin-top: 10px;
+      overflow: hidden;
+    }
+    .todo-progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--success));
+      border-radius: 99px;
+      transition: width 0.4s ease;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ============================================================
+       PAGE HEADER
+  ============================================================ -->
+  <header class="page-header">
+    <h1>Dashboard</h1>
+    <span id="greeting"></span>
+  </header>
+
+  <!-- ============================================================
+       MAIN GRID — contains all 4 widgets
+  ============================================================ -->
+  <main class="grid">
+
+    <!-- ── WIDGET 1: CLOCK ──────────────────────────────────── -->
+    <div class="widget widget-clock">
+      <div class="widget-label">Current Time</div>
+      <div class="clock-time" id="clock-time">00:00:00</div>
+      <div class="clock-date" id="clock-date">—</div>
+    </div>
+
+    <!-- ── WIDGET 2: MOTIVATIONAL QUOTE ─────────────────────── -->
+    <div class="widget widget-quote">
+      <div class="widget-label">Today's Thought</div>
+      <div class="quote-text" id="quote-text"></div>
+      <div class="quote-author" id="quote-author"></div>
+    </div>
+
+    <!-- ── WIDGET 3: QUICK LINKS ─────────────────────────────── -->
+    <div class="widget widget-links">
+      <div class="widget-label">Quick Links &nbsp;·&nbsp; click ✎ to customise</div>
+      <div class="links-grid" id="links-grid">
+        <!-- Link cards injected by JS -->
+      </div>
+    </div>
+
+    <!-- ── WIDGET 4: TO-DO LIST ──────────────────────────────── -->
+    <div class="widget widget-todo">
+      <div class="widget-label">To-Do List</div>
+
+      <!-- Input row -->
+      <div class="todo-input-row">
+        <input
+          class="todo-input"
+          type="text"
+          id="todo-input"
+          placeholder="Add a new task…"
+          autocomplete="off"
+          maxlength="200"
+        />
+        <button class="btn-add" id="todo-add-btn">+ Add</button>
+      </div>
+
+      <!-- Task list -->
+      <ul class="todo-list" id="todo-list"></ul>
+
+      <!-- Progress & stats -->
+      <div class="todo-progress">
+        <div class="todo-progress-fill" id="todo-progress-fill" style="width:0%"></div>
+      </div>
+      <div class="todo-stats">
+        <span id="todo-stats-text">0 tasks</span>
+        <button class="btn-clear-done" id="todo-clear-btn">Clear completed</button>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ============================================================
+       EDIT LINK MODAL — hidden by default, shown when ✎ clicked
+  ============================================================ -->
+  <div class="modal-backdrop" id="edit-modal">
+    <div class="modal">
+      <h3>Edit Quick Link</h3>
+      <div class="modal-field">
+        <label>Label</label>
+        <input type="text" id="modal-label" placeholder="e.g. GitHub" maxlength="30" />
+      </div>
+      <div class="modal-field">
+        <label>URL</label>
+        <input type="url" id="modal-url" placeholder="https://…" />
+      </div>
+      <div class="modal-field">
+        <label>Icon (emoji)</label>
+        <input type="text" id="modal-icon" placeholder="e.g. 🐙" maxlength="4" />
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" id="modal-cancel">Cancel</button>
+        <button class="btn btn-primary" id="modal-save">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* ============================================================
+       SECTION 1: LIVE CLOCK
+       Updates every 1000ms using setInterval.
+       Formats time as HH:MM:SS and shows a full date string.
+    ============================================================ */
+    function updateClock() {
+      const now  = new Date();
+      const hh   = String(now.getHours()).padStart(2, '0');
+      const mm   = String(now.getMinutes()).padStart(2, '0');
+      const ss   = String(now.getSeconds()).padStart(2, '0');
+
+      document.getElementById('clock-time').textContent = `${hh}:${mm}:${ss}`;
+
+      const dateOpts = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+      document.getElementById('clock-date').textContent =
+        now.toLocaleDateString(undefined, dateOpts);
+    }
+
+    // Run immediately and then every second
+    updateClock();
+    setInterval(updateClock, 1000);
+
+    // Dynamic greeting in the page header based on time of day
+    (function setGreeting() {
+      const h = new Date().getHours();
+      const g = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
+      document.getElementById('greeting').textContent = `— ${g}`;
+    })();
+
+
+    /* ============================================================
+       SECTION 2: MOTIVATIONAL QUOTES
+       One is picked randomly each time the page loads.
+       Add more objects to the array to expand the collection.
+    ============================================================ */
+    const QUOTES = [
+      { text: "The secret of getting ahead is getting started.", author: "Mark Twain" },
+      { text: "Do what you can, with what you have, where you are.", author: "Theodore Roosevelt" },
+      { text: "It always seems impossible until it's done.", author: "Nelson Mandela" },
+      { text: "Success is not final, failure is not fatal: it is the courage to continue that counts.", author: "Winston Churchill" },
+      { text: "The only way to do great work is to love what you do.", author: "Steve Jobs" },
+      { text: "In the middle of every difficulty lies opportunity.", author: "Albert Einstein" },
+      { text: "Believe you can and you're halfway there.", author: "Theodore Roosevelt" },
+      { text: "Your time is limited, don't waste it living someone else's life.", author: "Steve Jobs" },
+      { text: "The best time to plant a tree was 20 years ago. The second best time is now.", author: "Chinese Proverb" },
+      { text: "Whether you think you can or you think you can't, you're right.", author: "Henry Ford" },
+      { text: "You miss 100% of the shots you don't take.", author: "Wayne Gretzky" },
+      { text: "What we think, we become.", author: "Buddha" },
+    ];
+
+    // Pick a random quote and inject it into the DOM
+    (function loadQuote() {
+      const q = QUOTES[Math.floor(Math.random() * QUOTES.length)];
+      document.getElementById('quote-text').textContent   = q.text;
+      document.getElementById('quote-author').textContent = `— ${q.author}`;
+    })();
+
+
+    /* ============================================================
+       SECTION 3: QUICK LINKS
+       Default links are shown on first load.
+       Customisations are saved to localStorage under 'ql_links'.
+    ============================================================ */
+
+    // Default link data — edit these to change the initial links
+    const DEFAULT_LINKS = [
+      { label: 'Google',  url: 'https://google.com',  icon: '🔍' },
+      { label: 'GitHub',  url: 'https://github.com',  icon: '🐙' },
+      { label: 'YouTube', url: 'https://youtube.com', icon: '▶️' },
+      { label: 'Reddit',  url: 'https://reddit.com',  icon: '🤖' },
+    ];
+
+    const LS_LINKS_KEY = 'ql_links';
+
+    // Load links from localStorage, falling back to defaults
+    function loadLinks() {
+      try {
+        const saved = localStorage.getItem(LS_LINKS_KEY);
+        return saved ? JSON.parse(saved) : DEFAULT_LINKS;
+      } catch (_) {
+        return DEFAULT_LINKS;
+      }
+    }
+
+    function saveLinks(links) {
+      localStorage.setItem(LS_LINKS_KEY, JSON.stringify(links));
+    }
+
+    // Render all four link cards into the grid
+    function renderLinks() {
+      const links = loadLinks();
+      const grid  = document.getElementById('links-grid');
+      grid.innerHTML = '';
+
+      links.forEach((link, idx) => {
+        const card = document.createElement('a');
+        card.className   = 'link-card';
+        card.href        = link.url;
+        card.target      = '_blank';
+        card.rel         = 'noopener noreferrer';
+        card.innerHTML   = `
+          <span class="link-icon">${link.icon}</span>
+          <span class="link-label">${link.label}</span>
+          <button class="link-edit-btn" data-idx="${idx}" title="Edit">✎</button>
+        `;
+
+        // Prevent the anchor navigating when the edit button is clicked
+        card.querySelector('.link-edit-btn').addEventListener('click', e => {
+          e.preventDefault();
+          e.stopPropagation();
+          openEditModal(idx);
+        });
+
+        grid.appendChild(card);
+      });
+    }
+
+    // ── Edit Modal logic ──────────────────────────────────────
+    let editingIdx = null; // which link is currently being edited
+
+    function openEditModal(idx) {
+      const links = loadLinks();
+      const link  = links[idx];
+      document.getElementById('modal-label').value = link.label;
+      document.getElementById('modal-url').value   = link.url;
+      document.getElementById('modal-icon').value  = link.icon;
+      editingIdx = idx;
+      document.getElementById('edit-modal').classList.add('open');
+    }
+
+    function closeEditModal() {
+      document.getElementById('edit-modal').classList.remove('open');
+      editingIdx = null;
+    }
+
+    document.getElementById('modal-cancel').addEventListener('click', closeEditModal);
+    document.getElementById('edit-modal').addEventListener('click', e => {
+      // Close if clicking the backdrop (not the modal box itself)
+      if (e.target === e.currentTarget) closeEditModal();
+    });
+
+    document.getElementById('modal-save').addEventListener('click', () => {
+      if (editingIdx === null) return;
+      const links   = loadLinks();
+      const label   = document.getElementById('modal-label').value.trim() || links[editingIdx].label;
+      const url     = document.getElementById('modal-url').value.trim()   || links[editingIdx].url;
+      const icon    = document.getElementById('modal-icon').value.trim()  || links[editingIdx].icon;
+      links[editingIdx] = { label, url, icon };
+      saveLinks(links);
+      renderLinks();
+      closeEditModal();
+    });
+
+    renderLinks(); // Initial render
+
+
+    /* ============================================================
+       SECTION 4: TO-DO LIST
+       Tasks are stored as an array of { id, text, done } objects
+       in localStorage under 'ql_todos'. The list re-renders every
+       time the state changes.
+    ============================================================ */
+    const LS_TODOS_KEY = 'ql_todos';
+
+    function loadTodos() {
+      try {
+        const saved = localStorage.getItem(LS_TODOS_KEY);
+        return saved ? JSON.parse(saved) : [];
+      } catch (_) {
+        return [];
+      }
+    }
+
+    function saveTodos(todos) {
+      localStorage.setItem(LS_TODOS_KEY, JSON.stringify(todos));
+    }
+
+    // Render the task list from current localStorage state
+    function renderTodos() {
+      const todos = loadTodos();
+      const list  = document.getElementById('todo-list');
+      list.innerHTML = '';
+
+      if (todos.length === 0) {
+        list.innerHTML = `<div class="todo-empty">No tasks yet — add one above ✦</div>`;
+      } else {
+        todos.forEach(todo => {
+          const li = document.createElement('li');
+          li.className = `todo-item${todo.done ? ' done' : ''}`;
+          li.innerHTML = `
+            <div class="todo-check" data-id="${todo.id}" role="checkbox" aria-checked="${todo.done}" tabindex="0"></div>
+            <span class="todo-text">${escapeHtml(todo.text)}</span>
+            <button class="todo-delete" data-id="${todo.id}" title="Delete task">✕</button>
+          `;
+          list.appendChild(li);
+        });
+      }
+
+      updateTodoStats(todos);
+    }
+
+    // Escape user text to prevent XSS
+    function escapeHtml(str) {
+      return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    // Update the progress bar and stats line
+    function updateTodoStats(todos) {
+      const total = todos.length;
+      const done  = todos.filter(t => t.done).length;
+      const pct   = total ? Math.round((done / total) * 100) : 0;
+
+      document.getElementById('todo-progress-fill').style.width = `${pct}%`;
+      document.getElementById('todo-stats-text').textContent =
+        total === 0 ? '0 tasks' : `${done} / ${total} completed`;
+    }
+
+    // Add a new task
+    function addTodo() {
+      const input = document.getElementById('todo-input');
+      const text  = input.value.trim();
+      if (!text) return;
+
+      const todos = loadTodos();
+      todos.push({ id: Date.now(), text, done: false });
+      saveTodos(todos);
+      renderTodos();
+      input.value = '';
+      input.focus();
+    }
+
+    // Toggle a task's done state
+    function toggleTodo(id) {
+      const todos = loadTodos();
+      const todo  = todos.find(t => t.id === id);
+      if (todo) todo.done = !todo.done;
+      saveTodos(todos);
+      renderTodos();
+    }
+
+    // Delete a task by id
+    function deleteTodo(id) {
+      const todos = loadTodos().filter(t => t.id !== id);
+      saveTodos(todos);
+      renderTodos();
+    }
+
+    // ── Event delegation on the list (handles check + delete) ──
+    document.getElementById('todo-list').addEventListener('click', e => {
+      const checkEl = e.target.closest('.todo-check');
+      const delEl   = e.target.closest('.todo-delete');
+
+      if (checkEl) toggleTodo(Number(checkEl.dataset.id));
+      if (delEl)   deleteTodo(Number(delEl.dataset.id));
+    });
+
+    // Keyboard accessibility for checkboxes
+    document.getElementById('todo-list').addEventListener('keydown', e => {
+      if ((e.key === ' ' || e.key === 'Enter') && e.target.classList.contains('todo-check')) {
+        e.preventDefault();
+        toggleTodo(Number(e.target.dataset.id));
+      }
+    });
+
+    // Add via button click
+    document.getElementById('todo-add-btn').addEventListener('click', addTodo);
+
+    // Add via Enter key in input
+    document.getElementById('todo-input').addEventListener('keydown', e => {
+      if (e.key === 'Enter') addTodo();
+    });
+
+    // Clear all completed tasks
+    document.getElementById('todo-clear-btn').addEventListener('click', () => {
+      const todos = loadTodos().filter(t => !t.done);
+      saveTodos(todos);
+      renderTodos();
+    });
+
+    renderTodos(); // Initial render
+  </script>
+</body>
+</html>
